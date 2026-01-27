@@ -13,17 +13,20 @@ public class FreeLancerProfile extends BaseEntity {
     private Integer experience;
     private Double hourlyRate;
     private String bio;
+    private String title; // e.g. "Full Stack Developer"
+
 	public FreeLancerProfile() {
 		super();
 		// TODO Auto-generated constructor stub
 	}
-	public FreeLancerProfile(User freelancer, String skills, Integer experience, Double hourlyRate, String bio) {
+	public FreeLancerProfile(User freelancer, String skills, Integer experience, Double hourlyRate, String bio, String title) {
 		super();
 		this.freelancer = freelancer;
 		this.skills = skills;
 		this.experience = experience;
 		this.hourlyRate = hourlyRate;
 		this.bio = bio;
+		this.title = title;
 	}
 	public User getFreelancer() {
 		return freelancer;
@@ -55,10 +58,16 @@ public class FreeLancerProfile extends BaseEntity {
 	public void setBio(String bio) {
 		this.bio = bio;
 	}
+	public String getTitle() {
+		return title;
+	}
+	public void setTitle(String title) {
+		this.title = title;
+	}
 	@Override
 	public String toString() {
 		return "FreeLancerProfile [freelancer=" + freelancer + ", skills=" + skills + ", experience=" + experience
-				+ ", hourlyRate=" + hourlyRate + ", bio=" + bio + "]";
+				+ ", hourlyRate=" + hourlyRate + ", bio=" + bio + ", title=" + title + "]";
 	}
 	 
     

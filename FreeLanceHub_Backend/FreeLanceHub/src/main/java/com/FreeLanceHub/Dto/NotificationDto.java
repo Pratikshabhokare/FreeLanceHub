@@ -1,65 +1,33 @@
 package com.FreeLanceHub.Dto;
 
-import com.FreeLanceHub.Entity.BaseEntity;
-import com.FreeLanceHub.Entity.User;
+import java.time.LocalDateTime;
 
-import jakarta.persistence.ManyToOne;
+public class NotificationDto {
+    private Long id;
+    private String message;
+    private String type;
+    private boolean isRead;
+    private LocalDateTime createdAt;
+    
+    public NotificationDto() {}
 
-public class NotificationDto extends BaseEntity {
+    public NotificationDto(Long id, String message, String type, boolean isRead, LocalDateTime createdAt) {
+        this.id = id;
+        this.message = message;
+        this.type = type;
+        this.isRead = isRead;
+        this.createdAt = createdAt;
+    }
 
-	private User user;
-	private String type;
-	private String message;
-	private boolean read;
-
-	public NotificationDto() {
-		super();
-		// TODO Auto-generated constructor stub
-	}
-
-	public NotificationDto(User user, String type, String message, boolean read) {
-		super();
-		this.user = user;
-		this.type = type;
-		this.message = message;
-		this.read = read;
-	}
-
-	public User getUser() {
-		return user;
-	}
-
-	public void setUser(User user) {
-		this.user = user;
-	}
-
-	public String getType() {
-		return type;
-	}
-
-	public void setType(String type) {
-		this.type = type;
-	}
-
-	public String getMessage() {
-		return message;
-	}
-
-	public void setMessage(String message) {
-		this.message = message;
-	}
-
-	public boolean isRead() {
-		return read;
-	}
-
-	public void setRead(boolean read) {
-		this.read = read;
-	}
-
-	@Override
-	public String toString() {
-		return "Notification [user=" + user + ", type=" + type + ", message=" + message + ", read=" + read + "]";
-	}
-
+    // Getters and Setters
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
+    public String getMessage() { return message; }
+    public void setMessage(String message) { this.message = message; }
+    public String getType() { return type; }
+    public void setType(String type) { this.type = type; }
+    public boolean isRead() { return isRead; }
+    public void setRead(boolean read) { isRead = read; }
+    public LocalDateTime getCreatedAt() { return createdAt; }
+    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
 }

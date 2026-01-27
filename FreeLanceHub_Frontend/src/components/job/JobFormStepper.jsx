@@ -12,6 +12,7 @@ const STEPS = [
 
 export default function JobFormStepper({ initialValue, onSubmit, onCancel }) {
   const [step, setStep] = useState(0);
+  const [showValidation, setShowValidation] = useState(false);
 
   const [form, setForm] = useState(() => ({
     title: "",
@@ -26,23 +27,44 @@ export default function JobFormStepper({ initialValue, onSubmit, onCancel }) {
     ...initialValue,
   }));
 
-  const canNext = useMemo(() => {
-    if (step === 0) return form.title.trim().length >= 5 && form.description.trim().length >= 10;
-    if (step === 1) return (form.skills || []).length > 0 && !!form.duration && (form.budgetMax ?? 0) >= (form.budgetMin ?? 0);
-    return true;
+  const errors = useMemo(() => {
+    const errs = {};
+    if (step === 0) {
+      if (!form.title.trim()) errs.title = "Title is required";
+      else if (form.title.trim().length < 5) errs.title = "Min 5 chars";
+
+      if (!form.description.trim()) errs.description = "Description is required";
+      else if (form.description.trim().length < 10) errs.description = "Min 10 chars";
+    }
+
+    if (step === 1) {
+      if ((form.skills || []).length === 0) errs.skills = "Select at least one skill";
+      if (!form.duration) errs.duration = "Duration is required";
+      if (form.budgetMin < 0) errs.budget = "Budget cannot be negative";
+      if (form.budgetMax < form.budgetMin) errs.budget = "Max budget cannot be less than Min";
+    }
+    return errs;
   }, [form, step]);
+
+  const isValid = Object.keys(errors).length === 0;
 
   function patch(p) {
     setForm((prev) => ({ ...prev, ...p }));
+    // Clear validation on edit if desired, or keep it to show real-time fixes
   }
 
   function next() {
-    if (!canNext) return;
+    if (!isValid) {
+      setShowValidation(true);
+      return;
+    }
     setStep((s) => Math.min(s + 1, STEPS.length - 1));
+    setShowValidation(false);
   }
 
   function prev() {
     setStep((s) => Math.max(s - 1, 0));
+    setShowValidation(false);
   }
 
   return (
@@ -67,32 +89,48 @@ export default function JobFormStepper({ initialValue, onSubmit, onCancel }) {
       {step === 0 && (
         <div className="list">
           <div>
-            <label className="small" style={{ display: "block", marginBottom: 6 }}>Job title</label>
+            <label className="small" style={{ display: "block", marginBottom: 6 }}>Job title <span style={{ color: 'red' }}>*</span></label>
             <input
               className="input"
+              style={{ borderColor: showValidation && errors.title ? "red" : undefined }}
               placeholder="e.g., Build Landing Page UI"
               value={form.title}
               onChange={(e) => patch({ title: e.target.value })}
             />
-            <div className="small" style={{ marginTop: 6 }}>Min 5 characters</div>
+            {showValidation && errors.title ? (
+              <div className="small" style={{ color: "red", marginTop: 4 }}>{errors.title}</div>
+            ) : (
+              <div className="small" style={{ marginTop: 6 }}>Min 5 characters</div>
+            )}
           </div>
 
           <div>
-            <label className="small" style={{ display: "block", marginBottom: 6 }}>Job description</label>
+            <label className="small" style={{ display: "block", marginBottom: 6 }}>Job description <span style={{ color: 'red' }}>*</span></label>
             <textarea
               className="textarea"
+              style={{ borderColor: showValidation && errors.description ? "red" : undefined }}
               placeholder="Explain requirements, scope, deliverables..."
               value={form.description}
               onChange={(e) => patch({ description: e.target.value })}
             />
-            <div className="small" style={{ marginTop: 6 }}>Min 10 characters</div>
+            {showValidation && errors.description ? (
+              <div className="small" style={{ color: "red", marginTop: 4 }}>{errors.description}</div>
+            ) : (
+              <div className="small" style={{ marginTop: 6 }}>Min 10 characters</div>
+            )}
           </div>
         </div>
       )}
 
       {step === 1 && (
         <div className="list">
-          <SkillSelector value={form.skills} onChange={(skills) => patch({ skills })} />
+          <div>
+            <label className="small" style={{ display: "block", marginBottom: 6 }}>Skills required <span style={{ color: 'red' }}>*</span></label>
+            <SkillSelector value={form.skills} onChange={(skills) => patch({ skills })} />
+            {showValidation && errors.skills && (
+              <div className="small" style={{ color: "red", marginTop: 4 }}>{errors.skills}</div>
+            )}
+          </div>
 
           <BudgetSelector
             budgetType={form.budgetType}
@@ -100,8 +138,17 @@ export default function JobFormStepper({ initialValue, onSubmit, onCancel }) {
             budgetMax={form.budgetMax}
             onChange={(p) => patch(p)}
           />
+          {showValidation && errors.budget && (
+            <div className="small" style={{ color: "red", marginTop: 4 }}>{errors.budget}</div>
+          )}
 
-          <DurationSelector value={form.duration} onChange={(duration) => patch({ duration })} />
+          <div>
+            <label className="small" style={{ display: "block", marginBottom: 6 }}>Duration <span style={{ color: 'red' }}>*</span></label>
+            <DurationSelector value={form.duration} onChange={(duration) => patch({ duration })} />
+            {showValidation && errors.duration && (
+              <div className="small" style={{ color: "red", marginTop: 4 }}>{errors.duration}</div>
+            )}
+          </div>
 
           <JobVisibility value={form.visibility} onChange={(visibility) => patch({ visibility })} />
 
@@ -113,9 +160,7 @@ export default function JobFormStepper({ initialValue, onSubmit, onCancel }) {
               <option value="closed">Closed</option>
             </select>
             <p className="small" style={{ marginTop: 8 }}>
-              {/* TODO (API): Update job status in DB when client accepts a proposal (Open -> In Progress -> Closed) */}
-              When you connect APIs: set <span className="kbd">in_progress</span> after accepting a proposal and
-              <span className="kbd">closed</span> when work is completed.
+              Set to <span className="kbd">open</span> to receive proposals.
             </p>
           </div>
         </div>
@@ -143,11 +188,6 @@ export default function JobFormStepper({ initialValue, onSubmit, onCancel }) {
               <span className="small">Description:</span>
               <p style={{ marginTop: 6, color: "#374151", lineHeight: 1.45 }}>{form.description}</p>
             </div>
-
-            <p className="small" style={{ marginTop: 8 }}>
-              {/* TODO (API): POST /api/jobs (create) or PUT /api/jobs/{id} (update) */}
-              Connect this form submit to your Spring Boot API. For now it saves to LocalStorage (mockApi).
-            </p>
           </div>
         </div>
       )}
@@ -164,7 +204,7 @@ export default function JobFormStepper({ initialValue, onSubmit, onCancel }) {
             </button>
           )}
           {step < STEPS.length - 1 ? (
-            <button className="btn-primary" type="button" onClick={next} disabled={!canNext} style={{ opacity: canNext ? 1 : 0.6 }}>
+            <button className="btn-primary" type="button" onClick={next}>
               Next
             </button>
           ) : (

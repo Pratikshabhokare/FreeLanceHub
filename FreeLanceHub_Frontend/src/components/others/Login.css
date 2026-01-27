@@ -5,13 +5,15 @@
     padding: 0;
 }
 
-body {
+.login-page-body {
     background: #e9ebee;
     display: flex;
     justify-content: center;
     align-items: center;
-    height: 100vh;
+    min-height: 80vh;
+    /* changed from height 100vh to fit with navbar */
     font-family: sans-serif;
+    width: 100%;
 }
 
 .container {
@@ -19,7 +21,7 @@ body {
     margin: auto;
     padding: 20px;
     height: 100%;
-    
+
 }
 
 .login,
@@ -149,17 +151,18 @@ input[type="checkbox"] {
     margin-bottom: 30px;
 }
 
+/* Fixed register button style */
 .register button {
     width: 100%;
     margin: 20px 0;
-        padding: 10px;
-        border: none;
-        background-color: #fff;
-        color: black;
-        font-size: 20px;
-        cursor: pointer;
-        transition: 0.3s all ease-in-out;
-        border-radius: 4px;
+    padding: 10px;
+    border: none;
+    background-color: #fff;
+    color: black;
+    font-size: 20px;
+    cursor: pointer;
+    transition: 0.3s all ease-in-out;
+    border-radius: 4px;
 }
 
 .register button:hover {
@@ -170,4 +173,139 @@ input[type="checkbox"] {
     font-size: 24px;
     border-radius: 5px;
     border: none;
+}
+
+.register button:hover {
+    color: #57b357;
+    background-color: #fff;
+    cursor: pointer;
+    width: 100%;
+    font-size: 24px;
+    border-radius: 5px;
+    border: none;
+}
+
+/* Custom Role Select Style */
+.role-select-wrapper {
+    position: relative;
+    margin-bottom: 25px;
+}
+
+.role-select {
+    width: 100%;
+    padding: 12px 15px;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    background-color: #eeeeef;
+    font-size: 16px;
+    color: #333;
+    appearance: none;
+    cursor: pointer;
+    transition: border-color 0.3s ease;
+}
+
+.role-select:focus {
+    outline: none;
+    border-color: #166534;
+    background-color: #fff;
+}
+
+.role-label {
+    display: block;
+    text-align: left;
+    margin-bottom: 8px;
+    font-weight: 600;
+    color: #4b5563;
+    font-size: 14px;
+}
+
+/* Enhancing inputs */
+input[type="text"],
+input[type="email"],
+input[type="password"] {
+    width: 100%;
+    padding: 12px 15px;
+    margin-bottom: 20px;
+    border: 1px solid transparent;
+    border-radius: 8px;
+    background-color: #eeeeef;
+    font-size: 16px;
+    transition: all 0.3s ease;
+}
+
+input[type="text"]:focus,
+input[type="email"]:focus,
+input[type="password"]:focus {
+    background-color: #fff;
+    border-color: #166534;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(22, 101, 52, 0.1);
+}
+
+.register button:hover {
+    color: #57b357;
+    background-color: #fff;
+    cursor: pointer;
+    width: 100%;
+    font-size: 24px;
+    border-radius: 5px;
+    border: none;
+}
+
+/* Custom Role Select Style */
+.role-select-wrapper {
+    position: relative;
+    margin-bottom: 25px;
+}
+
+.role-select {
+    width: 100%;
+    padding: 12px 15px;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    background-color: #eeeeef;
+    font-size: 16px;
+    color: #333;
+    appearance: none;
+    /* Remove default arrow */
+    cursor: pointer;
+    transition: border-color 0.3s ease;
+}
+
+.role-select:focus {
+    outline: none;
+    border-color: #166534;
+    background-color: #fff;
+}
+
+.role-label {
+    display: block;
+    text-align: left;
+    margin-bottom: 8px;
+    font-weight: 600;
+    color: #4b5563;
+    font-size: 14px;
+}
+
+/* Enhancing inputs */
+input[type="text"],
+input[type="email"],
+input[type="password"] {
+    width: 100%;
+    padding: 12px 15px;
+    margin-bottom: 20px;
+    border: 1px solid transparent;
+    border-radius: 8px;
+    background-color: #eeeeef;
+    font-size: 16px;
+    transition: all 0.3s ease;
+}
+
+input[type="text"]:focus,
+input[type="email"]:focus,
+input[type="password"]:focus {
+    background-color: #fff;
+    border-color: #166534;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(22, 101, 52, 0.1);
 }

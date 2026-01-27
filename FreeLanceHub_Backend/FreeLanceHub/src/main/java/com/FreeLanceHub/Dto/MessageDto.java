@@ -1,56 +1,37 @@
 package com.FreeLanceHub.Dto;
 
-import com.FreeLanceHub.Entity.BaseEntity;
-import com.FreeLanceHub.Entity.Chat;
-import com.FreeLanceHub.Entity.User;
+import java.time.LocalDateTime;
 
-import jakarta.persistence.ManyToOne;
+public class MessageDto {
+    private Long id;
+    private Long chatId;
+    private Long senderId;
+    private String senderName;
+    private String content;
+    private LocalDateTime sentAt;
 
-public class MessageDto extends BaseEntity {
+    public MessageDto() {}
 
-	private Chat chat;
-	private User sender;
-	private String content;
+    public MessageDto(Long id, Long chatId, Long senderId, String senderName, String content, LocalDateTime sentAt) {
+        this.id = id;
+        this.chatId = chatId;
+        this.senderId = senderId;
+        this.senderName = senderName;
+        this.content = content;
+        this.sentAt = sentAt;
+    }
 
-	public MessageDto() {
-		super();
-		// TODO Auto-generated constructor stub
-	}
-
-	public MessageDto(Chat chat, User sender, String content) {
-		super();
-		this.chat = chat;
-		this.sender = sender;
-		this.content = content;
-	}
-
-	public Chat getChat() {
-		return chat;
-	}
-
-	public void setChat(Chat chat) {
-		this.chat = chat;
-	}
-
-	public User getSender() {
-		return sender;
-	}
-
-	public void setSender(User sender) {
-		this.sender = sender;
-	}
-
-	public String getContent() {
-		return content;
-	}
-
-	public void setContent(String content) {
-		this.content = content;
-	}
-
-	@Override
-	public String toString() {
-		return "Message [chat=" + chat + ", sender=" + sender + ", content=" + content + "]";
-	}
-
+    // Getters and Setters
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
+    public Long getChatId() { return chatId; }
+    public void setChatId(Long chatId) { this.chatId = chatId; }
+    public Long getSenderId() { return senderId; }
+    public void setSenderId(Long senderId) { this.senderId = senderId; }
+    public String getSenderName() { return senderName; }
+    public void setSenderName(String senderName) { this.senderName = senderName; }
+    public String getContent() { return content; }
+    public void setContent(String content) { this.content = content; }
+    public LocalDateTime getSentAt() { return sentAt; }
+    public void setSentAt(LocalDateTime sentAt) { this.sentAt = sentAt; }
 }

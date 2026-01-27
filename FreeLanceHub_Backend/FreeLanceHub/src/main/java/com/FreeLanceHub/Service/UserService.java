@@ -19,4 +19,6 @@ public interface UserService {
 	public void updateUserStatus(Long userId, boolean enabled);
 
 	public UserDto saveUser(UserDto dto);
+	
+	public UserDto updateUser(Long id, UserDto dto);
 }

@@ -4,31 +4,32 @@ import Footer from "../../components/others/Footer";
 import "../dashboard.css";
 
 import ProposalCard from "../../components/proposals/ProposalCard";
-import ProposalForm from "../../components/proposals/ProposalForm";
 import {
-  initMockDb,
+  getCurrentUser,
   getFreelancerProposals,
-  getPublicJobs,
-  updateProposal,
-  withdrawProposal,
-} from "../../services/mockApi";
+  withdrawProposal
+} from "../../services/api";
 
 export default function MyProposalsPage() {
   const [proposals, setProposals] = useState([]);
-  const [jobs, setJobs] = useState([]);
   const [statusFilter, setStatusFilter] = useState("all");
-  const [editing, setEditing] = useState(null);
+  const [user, setUser] = useState(null);
 
   async function load() {
-    const [p, j] = await Promise.all([getFreelancerProposals(), getPublicJobs()]);
-    setProposals(p);
-    setJobs(j);
+    try {
+      const u = getCurrentUser();
+      setUser(u);
+      if (u) {
+        const p = await getFreelancerProposals(u.id);
+        setProposals(p || []);
+      }
+    } catch (e) {
+      console.error("Failed to load proposals", e);
+    }
   }
 
   useEffect(() => {
-    initMockDb();
     load();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const filtered = useMemo(() => {
@@ -37,21 +38,13 @@ export default function MyProposalsPage() {
   }, [proposals, statusFilter]);
 
   async function onWithdraw(p) {
-    const res = await withdrawProposal(p.id);
-    if (res?.ok === false) alert(res.message);
-    await load();
-  }
-
-  async function onSaveEdit(payload) {
-    const res = await updateProposal(editing.id, {
-      coverLetter: payload.coverLetter,
-      bidAmount: payload.bidAmount,
-      timeline: payload.timeline,
-      attachments: payload.attachments,
-    });
-    if (res?.ok === false) alert(res.message);
-    setEditing(null);
-    await load();
+    if (!confirm("Are you sure you want to withdraw this proposal?")) return;
+    try {
+      await withdrawProposal(p.id);
+      load();
+    } catch (e) {
+      alert("Failed to withdraw: " + e.message);
+    }
   }
 
   return (
@@ -68,11 +61,10 @@ export default function MyProposalsPage() {
           <div className="toolbar">
             <select className="select" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
               <option value="all">All</option>
-              <option value="sent">Sent</option>
-              <option value="shortlisted">Shortlisted</option>
-              <option value="accepted">Accepted</option>
-              <option value="rejected">Rejected</option>
-              <option value="withdrawn">Withdrawn</option>
+              <option value="PENDING">Pending</option>
+              <option value="ACCEPTED">Accepted</option>
+              <option value="REJECTED">Rejected</option>
+              <option value="WITHDRAWN">Withdrawn</option>
             </select>
           </div>
         </div>
@@ -83,8 +75,8 @@ export default function MyProposalsPage() {
               key={p.id}
               proposal={p}
               mode="freelancer"
-              onEdit={() => setEditing(p)}
               onWithdraw={onWithdraw}
+            // Editing content not supported in backend yet
             />
           ))}
 
@@ -95,25 +87,6 @@ export default function MyProposalsPage() {
           )}
         </div>
       </div>
-
-      {editing && (
-        <div className="modal-backdrop" onMouseDown={() => setEditing(null)}>
-          <div className="modal" onMouseDown={(e) => e.stopPropagation()}>
-            <div className="modal-header">
-              <h2>Edit Proposal</h2>
-              <button className="btn-muted" onClick={() => setEditing(null)}>Close</button>
-            </div>
-            <div className="modal-body">
-              <ProposalForm
-                jobOptions={jobs}
-                initialValue={editing}
-                onCancel={() => setEditing(null)}
-                onSubmit={onSaveEdit}
-              />
-            </div>
-          </div>
-        </div>
-      )}
 
       <Footer />
     </>

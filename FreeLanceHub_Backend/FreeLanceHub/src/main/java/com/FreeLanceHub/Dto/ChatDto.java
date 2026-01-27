@@ -1,57 +1,39 @@
 package com.FreeLanceHub.Dto;
 
-import com.FreeLanceHub.Entity.BaseEntity;
-import com.FreeLanceHub.Entity.Job;
-import com.FreeLanceHub.Entity.User;
+import java.time.LocalDateTime;
 
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToOne;
+public class ChatDto {
+    private Long id;
+    private Long jobId;
+    private String jobTitle;
+    private Long partnerId;
+    private String partnerName;
+    private String lastMessage;
+    private LocalDateTime lastMessageTime;
 
-public class ChatDto extends BaseEntity {
+    public ChatDto() {}
 
-	private Job job;
-	private User client;
-	private User freelancer;
+    public ChatDto(Long id, Long jobId, String jobTitle, Long partnerId, String partnerName) {
+        this.id = id;
+        this.jobId = jobId;
+        this.jobTitle = jobTitle;
+        this.partnerId = partnerId;
+        this.partnerName = partnerName;
+    }
 
-	public ChatDto() {
-		super();
-		// TODO Auto-generated constructor stub
-	}
-
-	public ChatDto(Job job, User client, User freelancer) {
-		super();
-		this.job = job;
-		this.client = client;
-		this.freelancer = freelancer;
-	}
-
-	public Job getJob() {
-		return job;
-	}
-
-	public void setJob(Job job) {
-		this.job = job;
-	}
-
-	public User getClient() {
-		return client;
-	}
-
-	public void setClient(User client) {
-		this.client = client;
-	}
-
-	public User getFreelancer() {
-		return freelancer;
-	}
-
-	public void setFreelancer(User freelancer) {
-		this.freelancer = freelancer;
-	}
-
-	@Override
-	public String toString() {
-		return "Chat [job=" + job + ", client=" + client + ", freelancer=" + freelancer + "]";
-	}
-
+    // Getters and Setters
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
+    public Long getJobId() { return jobId; }
+    public void setJobId(Long jobId) { this.jobId = jobId; }
+    public String getJobTitle() { return jobTitle; }
+    public void setJobTitle(String jobTitle) { this.jobTitle = jobTitle; }
+    public Long getPartnerId() { return partnerId; }
+    public void setPartnerId(Long partnerId) { this.partnerId = partnerId; }
+    public String getPartnerName() { return partnerName; }
+    public void setPartnerName(String partnerName) { this.partnerName = partnerName; }
+    public String getLastMessage() { return lastMessage; }
+    public void setLastMessage(String lastMessage) { this.lastMessage = lastMessage; }
+    public LocalDateTime getLastMessageTime() { return lastMessageTime; }
+    public void setLastMessageTime(LocalDateTime lastMessageTime) { this.lastMessageTime = lastMessageTime; }
 }

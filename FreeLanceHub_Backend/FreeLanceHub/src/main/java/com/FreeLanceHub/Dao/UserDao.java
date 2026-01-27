@@ -20,4 +20,6 @@ public interface UserDao {
 	public boolean updateUser(Long id, User user);
 
 	public boolean deleteUser(Long userId);
+	
+	public User getUserById(Long id);
 }

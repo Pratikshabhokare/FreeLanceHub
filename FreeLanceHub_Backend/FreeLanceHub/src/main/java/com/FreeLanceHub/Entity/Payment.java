@@ -1,82 +1,79 @@
 package com.FreeLanceHub.Entity;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.ManyToOne;
+import jakarta.persistence.*;
+import java.time.LocalDateTime;
 
 @Entity
+@Table(name = "payments")
 public class Payment extends BaseEntity {
-	@ManyToOne
-	private Job job;
-	@ManyToOne
-	private User client;
-	@ManyToOne
-	private User freelancer;
-	private Double amount;
-	@Enumerated(EnumType.STRING)
-	@Column(nullable = false)
-	private PaymentStatus status;
 
-	public Payment() {
-		super();
-		// TODO Auto-generated constructor stub
-	}
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "job_id", nullable = false)
+    private Job job;
 
-	public Payment(Job job, User client, User freelancer, Double amount, PaymentStatus status) {
-		super();
-		this.job = job;
-		this.client = client;
-		this.freelancer = freelancer;
-		this.amount = amount;
-		this.status = status;
-	}
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "payer_id", nullable = false)
+    private User payer;
 
-	public Job getJob() {
-		return job;
-	}
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "payee_id", nullable = false)
+    private User payee;
 
-	public void setJob(Job job) {
-		this.job = job;
-	}
+    @Column(nullable = false)
+    private Double amount;
 
-	public User getClient() {
-		return client;
-	}
+    private String transactionId; // Simulated unique ID
 
-	public void setClient(User client) {
-		this.client = client;
-	}
+    public Payment() {
+        super();
+    }
 
-	public User getFreelancer() {
-		return freelancer;
-	}
+    public Payment(Job job, User payer, User payee, Double amount, String transactionId) {
+        super();
+        this.job = job;
+        this.payer = payer;
+        this.payee = payee;
+        this.amount = amount;
+        this.transactionId = transactionId;
+    }
 
-	public void setFreelancer(User freelancer) {
-		this.freelancer = freelancer;
-	}
+    public Job getJob() {
+        return job;
+    }
 
-	public Double getAmount() {
-		return amount;
-	}
+    public void setJob(Job job) {
+        this.job = job;
+    }
 
-	public void setAmount(Double amount) {
-		this.amount = amount;
-	}
+    public User getPayer() {
+        return payer;
+    }
 
-	public PaymentStatus getStatus() {
-		return status;
-	}
+    public void setPayer(User payer) {
+        this.payer = payer;
+    }
 
-	public void setStatus(PaymentStatus status) {
-		this.status = status;
-	}
+    public User getPayee() {
+        return payee;
+    }
 
-	@Override
-	public String toString() {
-		return "Payment [job=" + job + ", client=" + client + ", freelancer=" + freelancer + ", amount=" + amount
-				+ ", status=" + status + "]";
-	}
+    public void setPayee(User payee) {
+        this.payee = payee;
+    }
 
+    public Double getAmount() {
+        return amount;
+    }
+
+    public void setAmount(Double amount) {
+        this.amount = amount;
+    }
+
+    public String getTransactionId() {
+        return transactionId;
+    }
+
+    public void setTransactionId(String transactionId) {
+        this.transactionId = transactionId;
+    }
 }

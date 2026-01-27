@@ -111,13 +111,26 @@ public class FreeLancerServiceImpl implements FreeLancerService {
 		profile.setExperience(request.getExperience());
 		profile.setHourlyRate(request.getHourlyRate());
 		profile.setBio(request.getBio());
+		profile.setTitle(request.getTitle());
 
 		return profileRepository.save(profile);
+	}
+
+	@Override
+	public FreeLancerProfile getProfile(Long freelancerId) {
+		return profileRepository.findByFreelancerId(freelancerId).orElse(null);
 	}
 
 	/* -------------------- Search Freelancers -------------------- */
 	@Override
 	public List<FreeLancerProfile> searchFreelancersBySkills(String skills) {
 		return profileRepository.findBySkillsContainingIgnoreCase(skills);
+	}
+
+	@Override
+	public List<FreeLancerProfile> searchFreelancersAdvanced(String skills, Double maxHourlyRate, Integer minExperience) {
+		return profileRepository.findAll(
+				com.FreeLanceHub.Specification.FreelancerSpecification.filterFreelancers(skills, maxHourlyRate, minExperience)
+		);
 	}
 }

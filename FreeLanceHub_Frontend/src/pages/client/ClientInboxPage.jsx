@@ -5,56 +5,87 @@ import "../dashboard.css";
 
 import ProposalCard from "../../components/proposals/ProposalCard";
 import {
-  initMockDb,
-  getJobs,
-  getProposalCountsByJob,
+  getCurrentUser,
+  getJobsByClient,
   getProposalsByJob,
-  setProposalStatus,
-} from "../../services/mockApi";
+  updateProposalStatus,
+  createOrGetChat
+} from "../../services/api";
+import { useNavigate } from "react-router-dom";
 
 export default function ClientInboxPage() {
   const [jobs, setJobs] = useState([]);
-  const [counts, setCounts] = useState({});
   const [activeJobId, setActiveJobId] = useState("");
   const [jobProposals, setJobProposals] = useState([]);
-
-  async function loadJobs() {
-    const [j, c] = await Promise.all([getJobs(), getProposalCountsByJob()]);
-    setJobs(j);
-    setCounts(c);
-    if (!activeJobId && j[0]?.id) setActiveJobId(j[0].id);
-  }
-
-  async function loadProposals(jobId) {
-    if (!jobId) return;
-    const p = await getProposalsByJob(jobId);
-    setJobProposals(p);
-  }
+  const [user, setUser] = useState(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
-    initMockDb();
-    loadJobs();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    const u = getCurrentUser();
+    setUser(u);
+    if (u) loadJobs(u.id);
   }, []);
 
   useEffect(() => {
-    loadProposals(activeJobId);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    if (activeJobId) {
+      loadProposals(activeJobId);
+    } else {
+      setJobProposals([]);
+    }
   }, [activeJobId]);
+
+  async function loadJobs(userId) {
+    try {
+      const myJobs = await getJobsByClient(userId);
+      setJobs(myJobs || []);
+      if (myJobs && myJobs.length > 0) setActiveJobId(myJobs[0].id);
+    } catch (e) {
+      console.error("Failed to load jobs", e);
+    }
+  }
+
+  async function loadProposals(jobId) {
+    try {
+      const p = await getProposalsByJob(jobId);
+      setJobProposals(p);
+    } catch (e) {
+      console.error("Failed to load proposals", e);
+    }
+  }
 
   const activeJob = useMemo(() => jobs.find((j) => j.id === activeJobId), [jobs, activeJobId]);
 
+  async function startChat(p) {
+    try {
+      // p.freelancer.id might need check if it exists in proposal object
+      const chatId = await createOrGetChat(p.job.id, p.freelancer.id, user.id);
+      navigate('/messages');
+    } catch (e) {
+      console.error("Failed to start chat", e);
+      alert("Failed to start chat. Ensure freelancer info is available.");
+    }
+  }
+
   async function acceptProposal(p) {
-    await setProposalStatus(p.id, "accepted");
-    await loadJobs();
-    await loadProposals(activeJobId);
-    alert("Proposal accepted! Chat will be enabled for both (connect chat API later).");
+    if (!confirm("Accept this proposal?")) return;
+    try {
+      await updateProposalStatus(p.id, "ACCEPTED");
+      alert("Proposal accepted!");
+      await loadJobs(user.id); // Reload jobs to update status in list
+      loadProposals(activeJobId);
+    } catch (e) {
+      alert("Failed to accept: " + e.message);
+    }
   }
 
   async function rejectProposal(p) {
-    await setProposalStatus(p.id, "rejected");
-    await loadJobs();
-    await loadProposals(activeJobId);
+    if (!confirm("Reject this proposal?")) return;
+    try {
+      await updateProposalStatus(p.id, "REJECTED");
+      loadProposals(activeJobId);
+    } catch (e) {
+      alert("Failed to reject: " + e.message);
+    }
   }
 
   return (
@@ -66,7 +97,7 @@ export default function ClientInboxPage() {
           <div className="page-title">
             <h1>Client Inbox</h1>
             <p>
-              View proposals submitted by freelancers for your jobs. You can accept or reject proposals anytime.
+              View proposals submitted by freelancers for your jobs.
             </p>
           </div>
         </div>
@@ -87,6 +118,7 @@ export default function ClientInboxPage() {
                     textAlign: "left",
                     cursor: "pointer",
                     borderColor: activeJobId === j.id ? "#16a34a" : "#e5e7eb",
+                    background: activeJobId === j.id ? "#f0fdf4" : "white"
                   }}
                   onClick={() => setActiveJobId(j.id)}
                 >
@@ -94,13 +126,9 @@ export default function ClientInboxPage() {
                     <div style={{ minWidth: 0 }}>
                       <div style={{ fontWeight: 700, color: "#111827", overflowWrap: "anywhere" }}>{j.title}</div>
                       <div className="small" style={{ marginTop: 6 }}>
-                        Status: <span className="kbd">{j.status}</span> • Visibility: <span className="kbd">{j.visibility}</span>
+                        Status: <span className="kbd">{j.status}</span>
                       </div>
                     </div>
-
-                    <span className="badge-pill">
-                      Proposals: <span className="kbd">{counts[j.id] || 0}</span>
-                    </span>
                   </div>
                 </button>
               ))}
@@ -132,6 +160,7 @@ export default function ClientInboxPage() {
                   mode="client"
                   onAccept={acceptProposal}
                   onReject={rejectProposal}
+                  onMessage={startChat}
                 />
               ))}
 

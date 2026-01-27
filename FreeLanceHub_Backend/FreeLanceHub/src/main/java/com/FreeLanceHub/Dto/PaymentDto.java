@@ -1,80 +1,53 @@
 package com.FreeLanceHub.Dto;
 
-import com.FreeLanceHub.Entity.BaseEntity;
-import com.FreeLanceHub.Entity.Job;
-import com.FreeLanceHub.Entity.ProposalStatus;
-import com.FreeLanceHub.Entity.User;
+import java.time.LocalDateTime;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.ManyToOne;
+public class PaymentDto {
+    private Long id;
+    private Long jobId;
+    private String jobTitle;
+    private Long payerId;
+    private String payerName;
+    private Long payeeId;
+    private String payeeName;
+    private Double amount;
+    private String transactionId;
+    private LocalDateTime paymentDate;
 
-public class PaymentDto extends BaseEntity {
+    public PaymentDto() {}
 
-	private Job job;
-	private User freelancer;
-	private Double bidAmount;
-	private String message;
-	private ProposalStatus status;
+    public PaymentDto(Long id, Long jobId, String jobTitle, Long payerId, String payerName, Long payeeId, String payeeName, Double amount, String transactionId, LocalDateTime paymentDate) {
+        this.id = id;
+        this.jobId = jobId;
+        this.jobTitle = jobTitle;
+        this.payerId = payerId;
+        this.payerName = payerName;
+        this.payeeId = payeeId;
+        this.payeeName = payeeName;
+        this.amount = amount;
+        this.transactionId = transactionId;
+        this.paymentDate = paymentDate;
+    }
 
-	public PaymentDto() {
-		super();
-		// TODO Auto-generated constructor stub
-	}
-
-	public PaymentDto(Job job, User freelancer, Double bidAmount, String message, ProposalStatus status) {
-		super();
-		this.job = job;
-		this.freelancer = freelancer;
-		this.bidAmount = bidAmount;
-		this.message = message;
-		this.status = status;
-	}
-
-	public Job getJob() {
-		return job;
-	}
-
-	public void setJob(Job job) {
-		this.job = job;
-	}
-
-	public User getFreelancer() {
-		return freelancer;
-	}
-
-	public void setFreelancer(User freelancer) {
-		this.freelancer = freelancer;
-	}
-
-	public Double getBidAmount() {
-		return bidAmount;
-	}
-
-	public void setBidAmount(Double bidAmount) {
-		this.bidAmount = bidAmount;
-	}
-
-	public String getMessage() {
-		return message;
-	}
-
-	public void setMessage(String message) {
-		this.message = message;
-	}
-
-	public ProposalStatus getStatus() {
-		return status;
-	}
-
-	public void setStatus(ProposalStatus status) {
-		this.status = status;
-	}
-
-	@Override
-	public String toString() {
-		return "Proposal [job=" + job + ", freelancer=" + freelancer + ", bidAmount=" + bidAmount + ", message="
-				+ message + ", status=" + status + "]";
-	}
+    // Getters and Setters
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
+    public Long getJobId() { return jobId; }
+    public void setJobId(Long jobId) { this.jobId = jobId; }
+    public String getJobTitle() { return jobTitle; }
+    public void setJobTitle(String jobTitle) { this.jobTitle = jobTitle; }
+    public Long getPayerId() { return payerId; }
+    public void setPayerId(Long payerId) { this.payerId = payerId; }
+    public String getPayerName() { return payerName; }
+    public void setPayerName(String payerName) { this.payerName = payerName; }
+    public Long getPayeeId() { return payeeId; }
+    public void setPayeeId(Long payeeId) { this.payeeId = payeeId; }
+    public String getPayeeName() { return payeeName; }
+    public void setPayeeName(String payeeName) { this.payeeName = payeeName; }
+    public Double getAmount() { return amount; }
+    public void setAmount(Double amount) { this.amount = amount; }
+    public String getTransactionId() { return transactionId; }
+    public void setTransactionId(String transactionId) { this.transactionId = transactionId; }
+    public LocalDateTime getPaymentDate() { return paymentDate; }
+    public void setPaymentDate(LocalDateTime paymentDate) { this.paymentDate = paymentDate; }
 }

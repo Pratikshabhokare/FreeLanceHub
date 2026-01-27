@@ -23,6 +23,9 @@ public class FreeLancerProfileDto extends BaseEntity {
 	@NotBlank(message = "Bio cannot be empty")
 	private String bio;
 
+	private String title; // e.g. "Full Stack Developer"
+
+
 	public FreeLancerProfileDto() {
 		super();
 		// TODO Auto-generated constructor stub
@@ -69,10 +72,18 @@ public class FreeLancerProfileDto extends BaseEntity {
 		this.bio = bio;
 	}
 
+	public String getTitle() {
+		return title;
+	}
+
+	public void setTitle(String title) {
+		this.title = title;
+	}
+
 	@Override
 	public String toString() {
 		return "FreeLancerProfile [skills=" + skills + ", experience=" + experience + ", hourlyRate=" + hourlyRate
-				+ ", bio=" + bio + "]";
+				+ ", bio=" + bio + ", title=" + title + "]";
 	}
 
 }

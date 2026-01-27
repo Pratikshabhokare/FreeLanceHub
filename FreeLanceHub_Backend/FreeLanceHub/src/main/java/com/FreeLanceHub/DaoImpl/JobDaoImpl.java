@@ -57,8 +57,18 @@ public class JobDaoImpl implements JobDao {
 		return jobRepo.findByStatus(status);
 	}
 
+    @Override
+    public List<Job> findByClientId(Long clientId) {
+        return jobRepo.findByClientId(clientId);
+    }
+
 	@Override
 	public List<Job> searchJobs(String keyword) {
 		return jobRepo.findByTitleContainingIgnoreCaseOrDescriptionContainingIgnoreCase(keyword, keyword);
+	}
+
+	@Override
+	public List<Job> searchJobsAdvanced(org.springframework.data.jpa.domain.Specification<Job> spec) {
+		return jobRepo.findAll(spec);
 	}
 }

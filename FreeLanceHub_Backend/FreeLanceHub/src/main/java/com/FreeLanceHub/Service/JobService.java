@@ -25,6 +25,12 @@ public interface JobService {
 	// Get all jobs with a specific status
 	public List<JobDto> getJobsByStatus(JobStatus status);
 
-	// Search jobs by title or description
+    // Get jobs by Client ID
+    public List<JobDto> getJobsByClient(Long clientId);
+
+	// Search jobs by title/description (Simple)
 	public List<JobDto> searchJobs(String keyword);
+
+	// Advanced Search
+	public List<JobDto> searchJobsAdvanced(String title, String description, List<String> skills, Double minBudget, Double maxBudget, String duration);
 }

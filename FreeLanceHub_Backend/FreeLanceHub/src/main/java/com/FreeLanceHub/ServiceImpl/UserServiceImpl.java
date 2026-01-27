@@ -53,6 +53,19 @@ public class UserServiceImpl implements UserService {
 	        return mapToDto(saved);
 	}
 
+	@Override
+	public UserDto updateUser(Long id, UserDto dto) {
+		User existing = userDao.getUserById(id);
+		if (existing != null) {
+			if (dto.getName() != null) existing.setName(dto.getName());
+			if (dto.getEmail() != null) existing.setEmail(dto.getEmail());
+			// Only basic info update allowed here. Password/Role handled separately if needed.
+			userDao.updateUser(id, existing);
+			return mapToDto(existing);
+		}
+		throw new RuntimeException("User not found with id: " + id);
+	}
+
 	// ---------- helper ----------
 	private UserDto mapToDto(User user) {
 	    UserDto dto = new UserDto();

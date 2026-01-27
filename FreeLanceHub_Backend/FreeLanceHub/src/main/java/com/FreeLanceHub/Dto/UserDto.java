@@ -4,6 +4,7 @@ import com.FreeLanceHub.Entity.BaseEntity;
 import com.FreeLanceHub.Entity.Role;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class UserDto extends BaseEntity {
@@ -14,7 +15,7 @@ public class UserDto extends BaseEntity {
 	private Role role;
 	private boolean enabled;
 
-	@JsonIgnore
+	@JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
 	private String password;
 
 	public UserDto() {

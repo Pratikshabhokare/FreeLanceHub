@@ -56,9 +56,26 @@ public class JobController {
 		return jobService.getJobsByStatus(status);
 	}
 
-	// 🔹 Search Jobs
+    // 🔹 Get Jobs by Client ID
+    @GetMapping("/client/{clientId}")
+    public List<JobDto> getJobsByClient(@PathVariable Long clientId) {
+        return jobService.getJobsByClient(clientId);
+    }
+
+	// 🔹 Search Jobs (Simple & Advanced)
 	@GetMapping("/search")
-	public List<JobDto> searchJobs(@RequestParam String keyword) {
-		return jobService.searchJobs(keyword);
+	public List<JobDto> searchJobs(
+			@RequestParam(required = false) String keyword,
+			@RequestParam(required = false) String title,
+			@RequestParam(required = false) String description,
+			@RequestParam(required = false) List<String> skills,
+			@RequestParam(required = false) Double minBudget,
+			@RequestParam(required = false) Double maxBudget,
+			@RequestParam(required = false) String duration
+	) {
+		if (keyword != null && !keyword.isEmpty()) {
+			 return jobService.searchJobs(keyword);
+		}
+		return jobService.searchJobsAdvanced(title, description, skills, minBudget, maxBudget, duration);
 	}
 }

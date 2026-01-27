@@ -8,6 +8,7 @@ export default function ProposalCard({
   onReject,
   onWithdraw,
   onEdit,
+  onMessage,
 }) {
   const isClient = mode === "client";
   const isAccepted = proposal.status === "accepted";
@@ -56,12 +57,20 @@ export default function ProposalCard({
       <div style={{ marginTop: 14, display: "flex", justifyContent: "flex-end", gap: 8, flexWrap: "wrap" }}>
         {isClient ? (
           <>
-            <button className="btn-primary" onClick={() => onAccept?.(proposal)} disabled={isAccepted}>
-              Accept
-            </button>
-            <button className="btn-muted" onClick={() => onReject?.(proposal)}>
-              Reject
-            </button>
+            {proposal.status?.toUpperCase() === "PENDING" ? (
+              <>
+                <button className="btn-primary" onClick={() => onAccept?.(proposal)}>
+                  Accept
+                </button>
+                <button className="btn-muted" onClick={() => onReject?.(proposal)}>
+                  Reject
+                </button>
+              </>
+            ) : (
+              <span className="badge-pill" style={{ background: proposal.status?.toUpperCase() === "ACCEPTED" ? "#dcfce7" : "#fee2e2", color: proposal.status?.toUpperCase() === "ACCEPTED" ? "#166534" : "#991b1b" }}>
+                {proposal.status?.toUpperCase()}
+              </span>
+            )}
           </>
         ) : (
           <>

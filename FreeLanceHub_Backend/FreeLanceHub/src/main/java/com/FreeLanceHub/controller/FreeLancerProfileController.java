@@ -39,13 +39,25 @@ public class FreeLancerProfileController {
         return ResponseEntity.ok(profile);
     }
 
-    /* -------------------- Browse Freelancers by Skills -------------------- */
+    /* -------------------- Get Freelancer Profile -------------------- */
+    @GetMapping("/{freelancerId}/profile")
+    public ResponseEntity<FreeLancerProfile> getProfile(@PathVariable Long freelancerId) {
+        FreeLancerProfile profile = freelancerService.getProfile(freelancerId);
+        return ResponseEntity.ok(profile);
+    }
+
+    /* -------------------- Browse Freelancers by Skills (Simple & Advanced) -------------------- */
     @GetMapping("/search")
     public ResponseEntity<List<FreeLancerProfile>> searchFreelancers(
-            @RequestParam String skills) {
+            @RequestParam(required = false) String skills,
+            @RequestParam(required = false) Double maxHourlyRate,
+            @RequestParam(required = false) Integer minExperience) {
 
-        List<FreeLancerProfile> freelancers = freelancerService.searchFreelancersBySkills(skills);
-        return ResponseEntity.ok(freelancers);
+        if ((skills != null && !skills.isEmpty()) && maxHourlyRate == null && minExperience == null) {
+             // Simple search fallback
+             return ResponseEntity.ok(freelancerService.searchFreelancersBySkills(skills));
+        }
+        return ResponseEntity.ok(freelancerService.searchFreelancersAdvanced(skills, maxHourlyRate, minExperience));
     }
 
     /* -------------------- Get Freelancer Assigned Jobs -------------------- */

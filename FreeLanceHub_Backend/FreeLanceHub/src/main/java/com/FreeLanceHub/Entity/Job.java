@@ -1,11 +1,13 @@
 package com.FreeLanceHub.Entity;
 
 import jakarta.persistence.Column;
+import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import java.util.List;
 
 @Entity
 public class Job extends BaseEntity {
@@ -24,6 +26,15 @@ public class Job extends BaseEntity {
 	    @Enumerated(EnumType.STRING)
 	    @Column(nullable = false)
 	    private JobStatus status;
+
+        @ElementCollection
+        private List<String> skills;
+
+        private String duration;
+        private String visibility;
+        private String budgetType;
+        private Double budgetMin;
+        private Double budgetMax;
 
 		public Job() {
 			super();
@@ -88,6 +99,54 @@ public class Job extends BaseEntity {
 		public void setStatus(JobStatus status) {
 			this.status = status;
 		}
+
+        public List<String> getSkills() {
+            return skills;
+        }
+
+        public void setSkills(List<String> skills) {
+            this.skills = skills;
+        }
+
+        public String getDuration() {
+            return duration;
+        }
+
+        public void setDuration(String duration) {
+            this.duration = duration;
+        }
+
+        public String getVisibility() {
+            return visibility;
+        }
+
+        public void setVisibility(String visibility) {
+            this.visibility = visibility;
+        }
+        
+        public String getBudgetType() {
+            return budgetType;
+        }
+
+        public void setBudgetType(String budgetType) {
+            this.budgetType = budgetType;
+        }
+
+        public Double getBudgetMin() {
+            return budgetMin;
+        }
+
+        public void setBudgetMin(Double budgetMin) {
+            this.budgetMin = budgetMin;
+        }
+
+        public Double getBudgetMax() {
+            return budgetMax;
+        }
+
+        public void setBudgetMax(Double budgetMax) {
+            this.budgetMax = budgetMax;
+        }
 
 		@Override
 		public String toString() {

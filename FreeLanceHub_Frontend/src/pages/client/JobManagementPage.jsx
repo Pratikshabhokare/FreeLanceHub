@@ -3,7 +3,8 @@ import Navbar from "../../components/others/Navbar";
 import "../../pages/dashboard.css";
 import JobCard from "../../components/job/JobCard";
 import JobFormStepper from "../../components/job/JobFormStepper";
-import { initMockDb, getJobs, createJob, updateJob, deleteJob } from "../../services/mockApi";
+import PaymentModal from "../../components/common/PaymentModal";
+import { getJobs, getJobsByClient, createJob, updateJob, deleteJob } from "../../services/api"; // Switched to Real API
 
 export default function JobManagementPage() {
   const [jobs, setJobs] = useState([]);
@@ -14,15 +15,19 @@ export default function JobManagementPage() {
   const [viewJob, setViewJob] = useState(null);
 
   useEffect(() => {
-    initMockDb();
+    // initMockDb(); // Removed
     load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   async function load() {
-    // TODO (API): Replace with fetch("/api/jobs")
-    const data = await getJobs();
-    setJobs(data);
+    const user = JSON.parse(localStorage.getItem("user"));
+    if (user && user.id) {
+      const data = await getJobsByClient(user.id);
+      setJobs(data || []);
+    } else {
+      setJobs([]);
+    }
   }
 
   const filtered = useMemo(() => {
@@ -34,15 +39,20 @@ export default function JobManagementPage() {
         j.description.toLowerCase().includes(q) ||
         (j.skills || []).some((s) => s.toLowerCase().includes(q));
 
-      const matchesStatus = statusFilter === "all" ? true : j.status === statusFilter;
+      const status = j.status?.toUpperCase();
+      let matchesStatus = true;
+      if (statusFilter === "open") matchesStatus = status === "OPEN";
+      else if (statusFilter === "in_progress") matchesStatus = status === "IN_PROGRESS";
+      else if (statusFilter === "closed") matchesStatus = status === "COMPLETED" || status === "CANCELLED" || status === "CLOSED";
+
       return matchesQ && matchesStatus;
     });
   }, [jobs, query, statusFilter]);
 
   const stats = useMemo(() => {
-    const open = jobs.filter((j) => j.status === "open").length;
-    const inProgress = jobs.filter((j) => j.status === "in_progress").length;
-    const closed = jobs.filter((j) => j.status === "closed").length;
+    const open = jobs.filter((j) => j.status?.toUpperCase() === "OPEN").length;
+    const inProgress = jobs.filter((j) => j.status?.toUpperCase() === "IN_PROGRESS").length;
+    const closed = jobs.filter((j) => ["COMPLETED", "CANCELLED", "CLOSED"].includes(j.status?.toUpperCase())).length;
     return { open, inProgress, closed, total: jobs.length };
   }, [jobs]);
 
@@ -57,16 +67,22 @@ export default function JobManagementPage() {
   }
 
   async function handleSubmit(form) {
-    if (editingJob?.id) {
-      // TODO (API): PUT /api/jobs/{id}
-      await updateJob(editingJob.id, form);
-    } else {
-      // TODO (API): POST /api/jobs
-      await createJob(form);
+    try {
+      if (editingJob?.id) {
+        // TODO (API): PUT /api/jobs/{id}
+        await updateJob(editingJob.id, form);
+      } else {
+        // TODO (API): POST /api/jobs
+        await createJob(form);
+      }
+      setIsModalOpen(false);
+      setEditingJob(null);
+      await load();
+      alert("Job saved successfully!");
+    } catch (err) {
+      console.error(err);
+      alert("Failed to save job: " + err.message);
     }
-    setIsModalOpen(false);
-    setEditingJob(null);
-    await load();
   }
 
   async function handleDelete(job) {
@@ -75,6 +91,33 @@ export default function JobManagementPage() {
     // TODO (API): DELETE /api/jobs/{id}
     await deleteJob(job.id);
     await load();
+  }
+
+  const [paymentJob, setPaymentJob] = useState(null);
+
+  // ...
+
+  function handlePay(job) {
+    setPaymentJob(job);
+  }
+
+  async function processPayment() {
+    if (!paymentJob) return;
+
+    try {
+      const user = JSON.parse(localStorage.getItem("user"));
+      if (!user) return alert("Please login first");
+
+      const { submitPayment } = await import("../../services/api");
+      await submitPayment(paymentJob.id, user.id);
+
+      setPaymentJob(null);
+      await load();
+      // Success alerting handled in Modal
+    } catch (err) {
+      console.error(err);
+      alert("Payment failed: " + err.message);
+    }
   }
 
   function handleView(job) {
@@ -150,6 +193,7 @@ export default function JobManagementPage() {
                   onView={handleView}
                   onEdit={openEdit}
                   onDelete={handleDelete}
+                  onPay={handlePay}
                 />
               ))
             )}
@@ -231,6 +275,16 @@ export default function JobManagementPage() {
           </div>
         </div>
       )}
+      {/* PAYMENT MODAL */}
+      {
+        paymentJob && (
+          <PaymentModal
+            job={paymentJob}
+            onConfirm={processPayment}
+            onCancel={() => setPaymentJob(null)}
+          />
+        )
+      }
     </>
   );
 }

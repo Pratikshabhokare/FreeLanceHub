@@ -15,4 +15,6 @@ public interface ProposalService {
 
     void updateProposalStatus(Long proposalId, ProposalStatus status);
 
+    List<Proposal> getProposalsByFreelancer(Long freelancerId);
+
 }

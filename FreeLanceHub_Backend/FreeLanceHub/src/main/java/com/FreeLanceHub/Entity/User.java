@@ -20,14 +20,14 @@ public class User extends BaseEntity {
 	@Enumerated(EnumType.STRING)
 	private Role role;
 
-	private boolean enabled;
+	private Boolean enabled;
 
 	public User() {
 		super();
 		// TODO Auto-generated constructor stub
 	}
 
-	public User(String userName, String name, String email, String password, Role role, boolean enabled) {
+	public User(String userName, String name, String email, String password, Role role, Boolean enabled) {
 		super();
 		this.userName = userName;
 		this.name = name;
@@ -77,11 +77,11 @@ public class User extends BaseEntity {
 		this.role = role;
 	}
 
-	public boolean isEnabled() {
+	public Boolean isEnabled() {
 		return enabled;
 	}
 
-	public void setEnabled(boolean enabled) {
+	public void setEnabled(Boolean enabled) {
 		this.enabled = enabled;
 	}
 

@@ -1,6 +1,6 @@
 import StatusBadge from "./StatusBadge";
 
-export default function JobCard({ job, onView, onEdit, onDelete }) {
+export default function JobCard({ job, onView, onEdit, onDelete, onPay }) {
   return (
     <div className="card padded" style={{ display: "flex", justifyContent: "space-between", gap: 14 }}>
       <div style={{ flex: 1, minWidth: 0 }}>
@@ -44,6 +44,11 @@ export default function JobCard({ job, onView, onEdit, onDelete }) {
         </button>
 
         <div style={{ display: "flex", gap: 8 }}>
+          {job.status?.toUpperCase() === "IN_PROGRESS" && (
+            <button className="btn-success" onClick={() => onPay?.(job)} style={{ background: "#059669", color: "white" }}>
+              Pay & Complete
+            </button>
+          )}
           <button className="btn-muted" onClick={() => onEdit?.(job)}>Edit</button>
           <button className="btn-danger" onClick={() => onDelete?.(job)}>Delete</button>
         </div>

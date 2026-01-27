@@ -1,13 +1,20 @@
 package com.FreeLanceHub.Service;
 
+import com.FreeLanceHub.Dto.ChatDto;
+import com.FreeLanceHub.Dto.MessageDto;
 import java.util.List;
 
-import com.FreeLanceHub.Dto.ChatDto;
-import com.FreeLanceHub.Entity.Chat;
-
 public interface ChatService {
-	
-	Chat sendMessage(Long senderId, ChatDto dto);
+    
+    // Create or retrieve existing chat
+    ChatDto createOrGetChat(Long jobId, Long freelancerId, Long clientId);
 
-	List<Chat> getChatHistory(Long jobId);
+    // Get all chats for a user
+    List<ChatDto> getUserChats(Long userId);
+
+    // Get messages for a chat
+    List<MessageDto> getChatMessages(Long chatId);
+
+    // Send a message
+    MessageDto sendMessage(Long chatId, Long senderId, String content);
 }

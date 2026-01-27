@@ -11,6 +11,14 @@ public class JobDto extends BaseEntity {
 	private Double budget;
 	private JobStatus status;
 	private String clientName;
+	
+    private java.util.List<String> skills;
+    private String duration;
+    private String visibility;
+    private String budgetType;
+    private Double budgetMin;
+    private Double budgetMax;
+
 	public JobDto() {
 		super();
 		// TODO Auto-generated constructor stub
@@ -60,12 +68,58 @@ public class JobDto extends BaseEntity {
 	public void setClientName(String clientName) {
 		this.clientName = clientName;
 	}
+
+    public java.util.List<String> getSkills() {
+        return skills;
+    }
+
+    public void setSkills(java.util.List<String> skills) {
+        this.skills = skills;
+    }
+
+    public String getDuration() {
+        return duration;
+    }
+
+    public void setDuration(String duration) {
+        this.duration = duration;
+    }
+
+    public String getVisibility() {
+        return visibility;
+    }
+
+    public void setVisibility(String visibility) {
+        this.visibility = visibility;
+    }
+    
+    public String getBudgetType() {
+        return budgetType;
+    }
+
+    public void setBudgetType(String budgetType) {
+        this.budgetType = budgetType;
+    }
+
+    public Double getBudgetMin() {
+        return budgetMin;
+    }
+
+    public void setBudgetMin(Double budgetMin) {
+        this.budgetMin = budgetMin;
+    }
+
+    public Double getBudgetMax() {
+        return budgetMax;
+    }
+
+    public void setBudgetMax(Double budgetMax) {
+        this.budgetMax = budgetMax;
+    }
+
 	@Override
 	public String toString() {
 		return "JobDto [id=" + id + ", title=" + title + ", description=" + description + ", budget=" + budget
 				+ ", status=" + status + ", clientName=" + clientName + "]";
 	}
-	
-	
-
 }

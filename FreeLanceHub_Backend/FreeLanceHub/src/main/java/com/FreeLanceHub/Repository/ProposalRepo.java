@@ -13,4 +13,7 @@ public interface ProposalRepo extends JpaRepository<Proposal, Long> {
 	List<Proposal> findByJobId(Long jobId);
 
 	boolean existsByJobIdAndFreelancerId(Long jobId, Long freelancerId);
+	
+	List<Proposal> findByFreelancerId(Long freelancerId);
+
 }

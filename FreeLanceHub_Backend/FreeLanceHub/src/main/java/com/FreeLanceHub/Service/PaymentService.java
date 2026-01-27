@@ -1,12 +1,9 @@
 package com.FreeLanceHub.Service;
 
-import com.FreeLanceHub.Entity.Payment;
+import com.FreeLanceHub.Dto.PaymentDto;
+import java.util.List;
 
 public interface PaymentService {
-
-	Payment createPayment(Long jobId, Double amount);
-
-	void markPaymentAsPaid(Long paymentId);
-
-	Payment getPaymentByJob(Long jobId);
+    PaymentDto processPayment(Long jobId, Long payerId);
+    List<PaymentDto> getUserPaymentHistory(Long userId);
 }

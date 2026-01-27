@@ -22,7 +22,13 @@ public interface JobDao {
 	// Get all jobs with a specific status
 	public List<Job> getJobsByStatus(JobStatus status);
 
+    // Get jobs by Client ID
+    public List<Job> findByClientId(Long clientId);
+
 	// Search jobs by title or description
 	public List<Job> searchJobs(String keyword);
+
+	// Advanced Search
+	public List<Job> searchJobsAdvanced(org.springframework.data.jpa.domain.Specification<Job> spec);
 
 }

@@ -59,4 +59,20 @@ public class UserController {
 		}
 		return false;
 	}
+
+	// ---------------- UPDATE USER ----------------
+	@PutMapping("/update/{id}")
+	public UserDto updateUser(@PathVariable Long id, @RequestBody UserDto dto) {
+		return userSer.updateUser(id, dto);
+	}
+
+	// ---------------- LOGIN ----------------
+	@PostMapping("/login")
+	public User login(@RequestParam String email, @RequestParam String password) {
+		User user = userSer.getUserByEmail(email);
+		if (user != null && user.getPassword().equals(password)) {
+			return user;
+		}
+		throw new RuntimeException("Invalid credentials");
+	}
 }

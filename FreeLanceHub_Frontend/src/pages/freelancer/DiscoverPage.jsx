@@ -6,11 +6,11 @@ import "../dashboard.css";
 import DiscoveryJobCard from "../../components/job/DiscoveryJobCard";
 import ProposalForm from "../../components/proposals/ProposalForm";
 import {
-  initMockDb,
   getPublicJobs,
   getFreelancerProposals,
   submitProposal,
-} from "../../services/mockApi";
+  getCurrentUser, // Import this
+} from "../../services/api";
 
 export default function DiscoverPage() {
   const [jobs, setJobs] = useState([]);
@@ -18,34 +18,59 @@ export default function DiscoverPage() {
   const [query, setQuery] = useState("");
   const [applyJob, setApplyJob] = useState(null);
 
+  const filteredJobs = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    if (!q) return jobs || [];
+    return (jobs || []).filter((j) => {
+      return (
+        j.title.toLowerCase().includes(q) ||
+        j.description.toLowerCase().includes(q) ||
+        j.skills.some((skill) => skill.toLowerCase().includes(q))
+      );
+    });
+  }, [jobs, query]);
+
+  const appliedJobIds = useMemo(() => new Set((myProposals || []).map((p) => p.jobId)), [myProposals]);
+
   async function load() {
-    const [j, p] = await Promise.all([getPublicJobs(), getFreelancerProposals()]);
-    setJobs(j);
-    setMyProposals(p);
+    try {
+      const publicJobs = await getPublicJobs();
+      setJobs(publicJobs || []);
+
+      const user = getCurrentUser();
+      if (user) {
+        const freelancerProposals = await getFreelancerProposals(user.id);
+        setMyProposals(freelancerProposals || []);
+      }
+    } catch (error) {
+      console.error("Failed to load jobs or proposals:", error);
+    }
   }
 
   useEffect(() => {
-    initMockDb();
     load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const appliedJobIds = useMemo(() => new Set(myProposals.map((p) => p.jobId)), [myProposals]);
+  async function onSubmitProposal(form) {
+    const user = getCurrentUser();
+    if (!user) return alert("Please login first");
 
-  const filteredJobs = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    if (!q) return jobs;
-    return jobs.filter((j) => {
-      const hay = `${j.title} ${j.description} ${(j.skills || []).join(" ")}`.toLowerCase();
-      return hay.includes(q);
-    });
-  }, [jobs, query]);
+    const payload = {
+      jobId: form.jobId,
+      bidAmount: form.bidAmount,
+      message: form.coverLetter, // Map coverLetter to message
+    };
 
-  async function onSubmitProposal(payload) {
-    await submitProposal(payload);
-    setApplyJob(null);
-    await load();
-    alert("Proposal submitted!");
+    try {
+      await submitProposal(user.id, payload);
+      setApplyJob(null);
+      await load();
+      alert("Proposal submitted!");
+    } catch (err) {
+      console.error(err);
+      alert("Failed to submit proposal");
+    }
   }
 
   return (
@@ -76,7 +101,7 @@ export default function DiscoverPage() {
               <DiscoveryJobCard
                 key={job.id}
                 job={job}
-                disabled={already || job.status !== "open"}
+                disabled={already || job.status?.toUpperCase() !== "OPEN"}
                 onApply={() => setApplyJob(job)}
               />
             );

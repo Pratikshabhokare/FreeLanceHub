@@ -68,4 +68,9 @@ public class UserDaoImpl implements UserDao {
 		}
 		userRepo.updateUserStatus(userId, enabled);
 	}
+
+	@Override
+	public User getUserById(Long id) {
+		return userRepo.findById(id).orElse(null);
+	}
 }

@@ -25,6 +25,10 @@ public interface FreeLancerService {
 	public void updateJobStatus(Long freelancerId, Long jobId, JobStatus status);
 
 	public FreeLancerProfile saveOrUpdateProfile(Long freelancerId, FreeLancerProfileDto profileDto);
+	
+	public FreeLancerProfile getProfile(Long freelancerId);
 
 	public List<FreeLancerProfile> searchFreelancersBySkills(String skills);
+
+	public List<FreeLancerProfile> searchFreelancersAdvanced(String skills, Double maxHourlyRate, Integer minExperience);
 }
