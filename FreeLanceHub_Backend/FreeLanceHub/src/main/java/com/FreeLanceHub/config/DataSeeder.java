@@ -11,6 +11,10 @@ public class DataSeeder {
     @Bean
     CommandLineRunner initDatabase(UserRepo userRepo) {
         return args -> {
+            System.out.println("------ EXISTING USERS ------");
+            userRepo.getAllUser().forEach(u -> System.out.println("User: " + u.getEmail()));
+            System.out.println("----------------------------");
+
             if (userRepo.count() == 0) {
                 User client = new User();
                 client.setName("John Client");
@@ -29,7 +33,7 @@ public class DataSeeder {
                 freelancer.setRole(Role.FREELANCER);
                 freelancer.setEnabled(true);
                 userRepo.save(freelancer);
-                
+
                 System.out.println("Database seeded with default users: client@example.com, freelancer@example.com");
             }
         };

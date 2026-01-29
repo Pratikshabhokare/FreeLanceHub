@@ -2,23 +2,24 @@ export default function HeroLeft() {
   return (
     <div className="hero-left">
       <h1>
-        Your Future Begins <br /> with a New Opportunity
+        Build Your Dreams with <span>Expert Talent</span> & <span>Opportunities</span>
       </h1>
 
       <p>
-        Discover the newest job offers in your field. Our easy-to-use platform
-        brings you closer to your next big career opportunity.
+        Connecting the world's best freelancers with top-tier clients.
+        Start your journey today and unlock limitless possibilities.
       </p>
 
       <div className="search-box">
-        <input type="text" placeholder="Search your job" />
-        <button className="btn-primary">Get Started</button>
+        <i className="fas fa-search" style={{ marginLeft: '1rem', color: '#94a3b8' }}></i>
+        <input type="text" placeholder="What skill are you looking for?" />
+        <button>Search Now</button>
       </div>
 
       <div className="stats">
-        <Stat value="5k+" label="Job Offers" />
-        <Stat value="1k+" label="Key Partner" />
-        <Stat value="150" label="Personal Assistant" />
+        <Stat value="12k+" label="Job Posted" />
+        <Stat value="45k+" label="Freelancers" />
+        <Stat value="98%" label="Satisfaction" />
       </div>
     </div>
   );

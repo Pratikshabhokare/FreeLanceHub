@@ -1,299 +1,310 @@
 import { useEffect, useState } from "react";
+import { useParams, useNavigate } from "react-router-dom";
 import Navbar from "../components/others/Navbar";
-import { getCurrentUser, getFreelancerProfile, saveFreelancerProfile, updateUser } from "../services/api";
+import Footer from "../components/others/Footer";
+import { getCurrentUser, getFreelancerProfile, getReviewsForUser, getAverageRating, createChat } from "../services/api";
 import "../styles.css";
 
 // Helper for generic avatar
 const getAvatarUrl = (name) => `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=random&size=150`;
 
 export default function ProfilePage() {
-    const [user, setUser] = useState(null);
+    const [user, setUser] = useState(null); // Logged in user
+    const [viewedUser, setViewedUser] = useState(null); // User being viewed
     const [profile, setProfile] = useState({});
+    const [reviews, setReviews] = useState([]);
+    const [avgRating, setAvgRating] = useState(0);
     const [loading, setLoading] = useState(true);
 
-    // Edit Mode State
-    const [isEditing, setIsEditing] = useState(false);
-    const [formData, setFormData] = useState({});
-    const [saving, setSaving] = useState(false);
+    const { userId } = useParams();
+    const navigate = useNavigate();
 
     useEffect(() => {
         loadData();
-    }, []);
+    }, [userId]);
 
     async function loadData() {
         setLoading(true);
         try {
-            const u = getCurrentUser();
-            setUser(u);
-            if (u) {
-                // Initialize form data with basic info
-                let initialForm = {
-                    name: u.name,
-                    email: u.email,
-                    id: u.id, // keep track
-                    role: u.role
-                };
+            const currentUser = getCurrentUser();
+            setUser(currentUser);
 
-                if (u.role === "FREELANCER") {
-                    const p = await getFreelancerProfile(u.id);
-                    setProfile(p || {});
-                    // Merge profile data into form
-                    initialForm = {
-                        ...initialForm,
-                        title: p?.title || "",
-                        skills: p?.skills || "",
-                        hourlyRate: p?.hourlyRate || "",
-                        experience: p?.experience || "",
-                        bio: p?.bio || "",
-                    };
-                }
-                setFormData(initialForm);
+            let targetId = userId || currentUser?.id;
+            if (!targetId) {
+                console.error("ProfilePage: No user ID available");
+                setLoading(false);
+                return;
             }
+
+            console.log(`ProfilePage: Loading profile for user ID: ${targetId}`);
+
+            // Fetch Profile & User Data
+            try {
+                const p = await getFreelancerProfile(targetId);
+                console.log("ProfilePage: Freelancer profile data:", p);
+                if (p) {
+                    setProfile(p);
+                    setViewedUser(p.freelancer);
+                } else if (!userId) {
+                    // If its current user but no freelancer profile yet, just set viewedUser
+                    console.log("ProfilePage: No freelancer profile, using current user");
+                    setViewedUser(currentUser);
+                }
+            } catch (err) {
+                console.error("ProfilePage: Error fetching freelancer profile:", err);
+                // If profile fetch fails but it's the current user, still show their basic info
+                if (!userId && currentUser) {
+                    setViewedUser(currentUser);
+                }
+            }
+
+            // Fetch Reviews
+            try {
+                const revs = await getReviewsForUser(targetId);
+                setReviews(revs || []);
+            } catch (err) {
+                console.error("ProfilePage: Error fetching reviews:", err);
+                setReviews([]);
+            }
+
+            // Fetch Average Rating
+            try {
+                const avg = await getAverageRating(targetId);
+                setAvgRating(avg || 0);
+            } catch (err) {
+                console.error("ProfilePage: Error fetching average rating:", err);
+                setAvgRating(0);
+            }
+
         } catch (err) {
-            console.error("Failed to load profile", err);
+            console.error("ProfilePage: Failed to load profile", err);
         } finally {
             setLoading(false);
         }
     }
 
-    async function handleSave() {
-        setSaving(true);
+    async function handleStartChat() {
+        if (!user) {
+            navigate("/login");
+            return;
+        }
         try {
-            // 1. Update Basic Info
-            if (formData.name !== user.name || formData.email !== user.email) {
-                const updatedUser = await updateUser(user.id, {
-                    name: formData.name,
-                    email: formData.email
-                });
-                // Update local storage
-                const merged = { ...user, ...updatedUser };
-                localStorage.setItem("user", JSON.stringify(merged));
-                setUser(merged);
-            }
-
-            // 2. Update Professional Info (if freelancer)
-            if (user.role === "FREELANCER") {
-                const profilePayload = {
-                    title: formData.title,
-                    skills: formData.skills,
-                    hourlyRate: parseFloat(formData.hourlyRate) || 0,
-                    experience: parseInt(formData.experience) || 0,
-                    bio: formData.bio
-                };
-                const updatedProfile = await saveFreelancerProfile(user.id, profilePayload);
-                setProfile(updatedProfile);
-            }
-
-            setIsEditing(false);
-            alert("Profile updated successfully!");
+            // For now, use a dummy jobId = 0 or similar if it's a general chat invitation
+            // Or ideally, the UI should ask "which job are you interested in?"
+            // But to make it simple:
+            const chat = await createChat(0, viewedUser.id, user.id);
+            navigate("/messages", { state: { selectedChat: chat } });
         } catch (err) {
-            alert("Failed to save: " + err.message);
-        } finally {
-            setSaving(false);
+            alert("Failed to start chat: " + err.message);
         }
     }
 
-    if (loading) return <div className="p-20 text-center">Loading profile...</div>;
-    if (!user) return <div className="p-20 text-center">Please login first.</div>;
+    const isOwnProfile = user?.id === viewedUser?.id;
 
-    // --- RENDER VIEW MODE (Professional Look) ---
-    if (!isEditing) {
-        return (
-            <div style={{ backgroundColor: '#f3f4f6', minHeight: '100vh', paddingBottom: 50 }}>
-                <Navbar />
-                <div style={{ maxWidth: '1000px', margin: '40px auto', padding: '0 20px', fontFamily: '"Inter", sans-serif' }}>
+    return (
+        <div style={{ backgroundColor: '#f8fafc', minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+            <Navbar />
 
-                    {/* Header Card */}
-                    <div style={{
-                        background: 'linear-gradient(135deg, #10b981 0%, #047857 100%)', // Emerald gradient
-                        color: 'white',
-                        borderRadius: '16px',
-                        padding: '40px',
-                        boxShadow: '0 10px 25px rgba(0,0,0,0.1)',
-                        marginBottom: '30px',
-                        position: 'relative'
-                    }}>
+            {loading ? (
+                <main style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <div style={{ textAlign: 'center', padding: '60px 20px' }}>
+                        <div style={{ fontSize: '3rem', marginBottom: '20px' }}>⏳</div>
+                        <h2 style={{ color: '#64748b', fontWeight: 600 }}>Loading profile...</h2>
+                    </div>
+                </main>
+            ) : !viewedUser ? (
+                <main style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <div style={{ textAlign: 'center', padding: '60px 20px' }}>
+                        <div style={{ fontSize: '3rem', marginBottom: '20px' }}>👤</div>
+                        <h2 style={{ color: '#64748b', fontWeight: 600 }}>User not found</h2>
+                        <p style={{ color: '#94a3b8', marginTop: '10px' }}>The profile you're looking for doesn't exist.</p>
                         <button
-                            onClick={() => setIsEditing(true)}
-                            style={{
-                                position: 'absolute', top: 20, right: 20,
-                                background: 'rgba(255,255,255,0.2)', color: 'white', border: 'none',
-                                padding: '8px 16px', borderRadius: '20px', cursor: 'pointer', backdropFilter: 'blur(5px)'
-                            }}
+                            onClick={() => navigate('/')}
+                            style={{ marginTop: '20px', padding: '12px 24px', background: '#10b981', color: 'white', border: 'none', borderRadius: '10px', cursor: 'pointer', fontWeight: 600 }}
                         >
-                            ✏️ Edit Profile
+                            Go Home
                         </button>
+                    </div>
+                </main>
+            ) : (
+                <main style={{ flex: 1, maxWidth: '1100px', margin: '40px auto', width: '100%', padding: '0 20px' }}>
 
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '30px', flexWrap: 'wrap' }}>
-                            <img
-                                src={getAvatarUrl(user.name)}
-                                alt={user.name}
-                                style={{
-                                    width: '120px', height: '120px', borderRadius: '50%',
-                                    border: '4px solid rgba(255,255,255,0.3)', objectFit: 'cover'
-                                }}
-                            />
-                            <div style={{ flex: 1 }}>
-                                <h1 style={{ margin: '0 0 5px 0', fontSize: '2.5rem', fontWeight: 700 }}>{user.name}</h1>
-                                {user.role === "FREELANCER" && (
-                                    <h2 style={{ margin: '0 0 15px 0', fontSize: '1.25rem', fontWeight: 400, opacity: 0.9 }}>
-                                        {profile.title || "Freelancer"}
-                                    </h2>
-                                )}
-                                <p style={{ margin: 0, opacity: 0.8 }}>📍 {user.email}</p>
-                            </div>
-
-                            {user.role === "FREELANCER" && (
-                                <div style={{ textAlign: 'right', minWidth: 150 }}>
-                                    <div style={{ fontSize: '2rem', fontWeight: 'bold' }}>${profile.hourlyRate || 0}<span style={{ fontSize: '1rem', opacity: 0.7 }}>/hr</span></div>
-                                    <div style={{
-                                        marginTop: '10px', padding: '6px 12px', background: 'rgba(255,255,255,0.2)',
-                                        borderRadius: '12px', fontSize: '0.9rem', display: 'inline-block'
-                                    }}>
-                                        {profile.experience || 0} Years Exp.
+                    {/* Profile Header Card */}
+                    <div style={{
+                        background: 'white',
+                        borderRadius: '24px',
+                        overflow: 'hidden',
+                        boxShadow: '0 4px 20px rgba(0,0,0,0.05)',
+                        marginBottom: '30px',
+                        border: '1px solid #e2e8f0'
+                    }}>
+                        <div style={{ height: '160px', background: 'linear-gradient(135deg, #10b981 0%, #3b82f6 100%)' }}></div>
+                        <div style={{ padding: '0 40px 40px 40px', marginTop: '-60px' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: 20 }}>
+                                <div style={{ display: 'flex', gap: '25px', alignItems: 'flex-end' }}>
+                                    <img
+                                        src={viewedUser.profilePicture || getAvatarUrl(viewedUser.name)}
+                                        alt={viewedUser.name}
+                                        style={{
+                                            width: '140px', height: '140px', borderRadius: '30px',
+                                            border: '6px solid white', objectFit: 'cover',
+                                            boxShadow: '0 4px 10px rgba(0,0,0,0.1)'
+                                        }}
+                                    />
+                                    <div style={{ marginBottom: '10px' }}>
+                                        <h1 style={{ fontSize: '2.4rem', fontWeight: 800, color: '#1e293b', margin: 0 }}>{viewedUser.name}</h1>
+                                        <p style={{ color: '#64748b', fontSize: '1.1rem', margin: '4px 0' }}>@{viewedUser.userName}</p>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 8 }}>
+                                            <span style={{ color: '#f59e0b', fontSize: '1.2rem' }}>★</span>
+                                            <span style={{ fontWeight: 700, fontSize: '1.1rem' }}>{avgRating.toFixed(1)}</span>
+                                            <span style={{ color: '#94a3b8' }}>({reviews.length} reviews)</span>
+                                        </div>
                                     </div>
                                 </div>
-                            )}
+
+                                <div style={{ display: 'flex', gap: '12px', marginBottom: 10 }}>
+                                    {isOwnProfile ? (
+                                        <button onClick={() => navigate("/profile")} style={btnSecondary}>Edit Profile</button>
+                                    ) : (
+                                        <>
+                                            <button onClick={handleStartChat} style={btnPrimary}>Message</button>
+                                            <button style={btnSecondary}>Share Profile</button>
+                                        </>
+                                    )}
+                                </div>
+                            </div>
                         </div>
                     </div>
 
-                    {/* Main Content Grid */}
-                    <div style={{ display: 'grid', gridTemplateColumns: user.role === "FREELANCER" ? '2fr 1fr' : '1fr', gap: '30px' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 350px', gap: '30px' }}>
 
-                        {/* Left Column */}
-                        <div>
-                            {/* Bio Section */}
-                            {user.role === "FREELANCER" && (
-                                <section style={{ background: 'white', padding: '30px', borderRadius: '16px', boxShadow: '0 4px 6px rgba(0,0,0,0.05)', marginBottom: 30 }}>
-                                    <h3 style={{ marginTop: 0, color: '#111827', fontSize: '1.25rem', borderBottom: '1px solid #e5e7eb', paddingBottom: 10, marginBottom: 20 }}>About Me</h3>
-                                    <p style={{ lineHeight: '1.8', color: '#4b5563', whiteSpace: 'pre-wrap' }}>
-                                        {profile.bio || "No bio added yet."}
-                                    </p>
-                                </section>
-                            )}
+                        {/* Left Column: Bio & Reviews */}
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '30px' }}>
 
-                            {/* Portfolio Placeholder (Professional Touch) */}
-                            {user.role === "FREELANCER" && (
-                                <section style={{ background: 'white', padding: '30px', borderRadius: '16px', boxShadow: '0 4px 6px rgba(0,0,0,0.05)' }}>
-                                    <h3 style={{ marginTop: 0, color: '#111827', fontSize: '1.25rem', borderBottom: '1px solid #e5e7eb', paddingBottom: 10, marginBottom: 20 }}>Portfolio</h3>
-                                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 20 }}>
-                                        {/* Mock Portfolio Items for Visuals */}
-                                        {[1, 2, 3].map(i => (
-                                            <div key={i} style={{ borderRadius: 8, overflow: 'hidden', border: '1px solid #e5e7eb' }}>
-                                                <div style={{ height: 120, background: '#f3f4f6', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#9ca3af' }}>Project {i}</div>
-                                                <div style={{ padding: 10, fontSize: '0.9rem', fontWeight: 600 }}>Demo Project</div>
+                            {/* About Section */}
+                            <section style={cardStyle}>
+                                <h2 style={sectionTitle}>About</h2>
+                                <p style={{ lineHeight: '1.8', color: '#475569', fontSize: '1.1rem' }}>
+                                    {profile.bio || "This user hasn't added a bio yet."}
+                                </p>
+                            </section>
+
+                            {/* Reviews Section */}
+                            <section style={cardStyle}>
+                                <h2 style={sectionTitle}>Reviews</h2>
+                                {reviews.length === 0 ? (
+                                    <p style={{ color: '#94a3b8', textAlign: 'center', padding: '40px 0' }}>No reviews yet.</p>
+                                ) : (
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                                        {reviews.map(rev => (
+                                            <div key={rev.id} style={{ borderBottom: '1px solid #f1f5f9', paddingBottom: '20px' }}>
+                                                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
+                                                    <div style={{ fontWeight: 600 }}>{rev.reviewerName}</div>
+                                                    <div style={{ color: '#f59e0b' }}>{"★".repeat(Math.round(rev.rating))}</div>
+                                                </div>
+                                                <p style={{ color: '#475569', margin: '0 0 8px 0' }}>{rev.comment}</p>
+                                                <div style={{ fontSize: '0.85rem', color: '#94a3b8' }}>
+                                                    Project: {rev.jobTitle} • {new Date(rev.reviewDate).toLocaleDateString()}
+                                                </div>
                                             </div>
                                         ))}
                                     </div>
-                                    <p style={{ textAlign: 'center', color: '#9ca3af', marginTop: 20, fontSize: '0.9rem' }}>Portfolio uploads coming soon...</p>
-                                </section>
-                            )}
+                                )}
+                            </section>
                         </div>
 
-                        {/* Right Column (Freelancer Only) */}
-                        {user.role === "FREELANCER" && (
-                            <div>
-                                <section style={{
-                                    background: 'white', padding: '30px', borderRadius: '16px',
-                                    boxShadow: '0 4px 6px rgba(0,0,0,0.05)', position: 'sticky', top: 20
-                                }}>
-                                    <h3 style={{ marginTop: 0, color: '#111827', fontSize: '1.25rem', marginBottom: 20 }}>Skills</h3>
-                                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-                                        {profile.skills ? profile.skills.split(',').map((skill, idx) => (
-                                            <span key={idx} style={{
-                                                background: '#ecfdf5', color: '#047857', padding: '6px 12px',
-                                                borderRadius: '20px', fontSize: '0.85rem', fontWeight: 600
-                                            }}>
-                                                {skill.trim()}
-                                            </span>
-                                        )) : <span style={{ color: '#9ca3af' }}>No skills listed</span>}
+                        {/* Right Column: Stats & Skills */}
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '30px' }}>
+
+                            {/* Professional Info */}
+                            <section style={cardStyle}>
+                                <h2 style={sectionTitle}>Stats</h2>
+                                <div style={{ display: 'grid', gap: 15 }}>
+                                    <div style={statRow}>
+                                        <span style={statLabel}>Hourly Rate</span>
+                                        <span style={statValue}>${profile.hourlyRate || 0}/hr</span>
                                     </div>
-                                </section>
-                            </div>
-                        )}
-                    </div>
-                </div>
-            </div>
-        );
-    }
-
-    // --- RENDER EDIT MODE (Form) ---
-    return (
-        <div style={{ minHeight: '100vh', backgroundColor: '#f9fafb', padding: '40px 20px' }}>
-            <Navbar />
-            <div className="card" style={{ maxWidth: 600, margin: '40px auto', padding: 30 }}>
-                <h2 style={{ marginBottom: 20 }}>Edit Profile</h2>
-
-                <div style={{ display: 'grid', gap: 20 }}>
-                    <div>
-                        <label className="small display-block">Full Name</label>
-                        <input className="input" value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} />
-                    </div>
-
-                    <div>
-                        <label className="small display-block">Email</label>
-                        <input className="input" value={formData.email} onChange={e => setFormData({ ...formData, email: e.target.value })} />
-                    </div>
-
-                    {user.role === "FREELANCER" && (
-                        <>
-                            <div>
-                                <label className="small display-block">Professional Title</label>
-                                <input
-                                    className="input"
-                                    placeholder="e.g. Senior Full Stack Developer"
-                                    value={formData.title}
-                                    onChange={e => setFormData({ ...formData, title: e.target.value })}
-                                />
-                            </div>
-                            <div>
-                                <label className="small display-block">Bio</label>
-                                <textarea
-                                    className="textarea"
-                                    rows={5}
-                                    value={formData.bio}
-                                    onChange={e => setFormData({ ...formData, bio: e.target.value })}
-                                />
-                            </div>
-                            <div>
-                                <label className="small display-block">Skills (comma separated)</label>
-                                <input
-                                    className="input"
-                                    value={formData.skills}
-                                    onChange={e => setFormData({ ...formData, skills: e.target.value })}
-                                />
-                            </div>
-                            <div className="grid-2">
-                                <div>
-                                    <label className="small display-block">Hourly Rate ($)</label>
-                                    <input
-                                        className="input" type="number"
-                                        value={formData.hourlyRate}
-                                        onChange={e => setFormData({ ...formData, hourlyRate: e.target.value })}
-                                    />
+                                    <div style={statRow}>
+                                        <span style={statLabel}>Experience</span>
+                                        <span style={statValue}>{profile.experience || 0} Years</span>
+                                    </div>
+                                    <div style={statRow}>
+                                        <span style={statLabel}>Jobs Completed</span>
+                                        <span style={statValue}>{reviews.length}</span>
+                                    </div>
                                 </div>
-                                <div>
-                                    <label className="small display-block">Experience (Years)</label>
-                                    <input
-                                        className="input" type="number"
-                                        value={formData.experience}
-                                        onChange={e => setFormData({ ...formData, experience: e.target.value })}
-                                    />
-                                </div>
-                            </div>
-                        </>
-                    )}
+                            </section>
 
-                    <div style={{ display: 'flex', gap: 10, marginTop: 10 }}>
-                        <button className="btn-primary" onClick={handleSave} disabled={saving}>
-                            {saving ? "Saving..." : "Save Changes"}
-                        </button>
-                        <button className="btn-muted" onClick={() => setIsEditing(false)} disabled={saving}>
-                            Cancel
-                        </button>
+                            {/* Skills */}
+                            <section style={cardStyle}>
+                                <h2 style={sectionTitle}>Skills</h2>
+                                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                                    {profile.skills ? profile.skills.split(',').map((skill, i) => (
+                                        <span key={i} style={skillBadge}>{skill.trim()}</span>
+                                    )) : <span style={{ color: '#94a3b8' }}>None listed</span>}
+                                </div>
+                            </section>
+                        </div>
+
                     </div>
-                </div>
-            </div>
+                </main>
+            )}
+            <Footer />
         </div>
     );
 }
+
+// Styles
+const cardStyle = {
+    background: 'white',
+    padding: '30px',
+    borderRadius: '20px',
+    border: '1px solid #e2e8f0',
+    boxShadow: '0 2px 4px rgba(0,0,0,0.02)'
+};
+
+const sectionTitle = {
+    fontSize: '1.25rem',
+    fontWeight: 700,
+    color: '#1e293b',
+    marginTop: 0,
+    marginBottom: '20px',
+    borderBottom: '2px solid #f1f5f9',
+    paddingBottom: '10px'
+};
+
+const btnPrimary = {
+    background: '#10b981',
+    color: 'white',
+    border: 'none',
+    padding: '12px 28px',
+    borderRadius: '12px',
+    fontWeight: 600,
+    cursor: 'pointer',
+    fontSize: '1rem',
+    transition: 'transform 0.2s',
+};
+
+const btnSecondary = {
+    background: '#f1f5f9',
+    color: '#475569',
+    border: 'none',
+    padding: '12px 28px',
+    borderRadius: '12px',
+    fontWeight: 600,
+    cursor: 'pointer',
+    fontSize: '1rem'
+};
+
+const statRow = { display: 'flex', justifyContent: 'space-between', alignItems: 'center' };
+const statLabel = { color: '#64748b' };
+const statValue = { fontWeight: 700, color: '#1e293b' };
+const skillBadge = {
+    background: '#f0fdf4',
+    color: '#166534',
+    padding: '6px 14px',
+    borderRadius: '10px',
+    fontSize: '0.9rem',
+    fontWeight: 600,
+    border: '1px solid #dcfce7'
+};

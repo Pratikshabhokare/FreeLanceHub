@@ -57,14 +57,21 @@ public class JobDaoImpl implements JobDao {
 		return jobRepo.findByStatus(status);
 	}
 
-    @Override
-    public List<Job> findByClientId(Long clientId) {
-        return jobRepo.findByClientId(clientId);
-    }
+	@Override
+	public List<Job> findByClientId(Long clientId) {
+		return jobRepo.findByClientId(clientId);
+	}
+
+	@Override
+	public List<Job> findByAssignedFreelancerId(Long freelancerId) {
+		return jobRepo.findByAssignedFreelancerId(freelancerId);
+	}
 
 	@Override
 	public List<Job> searchJobs(String keyword) {
-		return jobRepo.findByTitleContainingIgnoreCaseOrDescriptionContainingIgnoreCase(keyword, keyword);
+		return jobRepo.findByStatusAndTitleContainingIgnoreCaseOrStatusAndDescriptionContainingIgnoreCase(
+				JobStatus.OPEN, keyword,
+				JobStatus.OPEN, keyword);
 	}
 
 	@Override

@@ -25,6 +25,7 @@ export default function Login() {
   const [userName, setUserName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [role, setRole] = useState("FREELANCER"); // Default role
 
   async function handleSubmit(e) {
@@ -42,13 +43,14 @@ export default function Login() {
           role,
           enabled: true
         };
-        await register(payload);
-        alert("Registration successful! Please log in.");
+        const msg = await register(payload);
+        alert(msg || "Registration successful! Please log in.");
         setIsRegistering(false); // Switch back to login
       } else {
         // --- LOGIN FLOW ---
+        // Pass 'email' state as 'userName' to match backend LoginRequest
         const user = await login(email, password);
-        if (user.role === "CLIENT") {
+        if (user && user.role === "CLIENT") {
           navigate("/client/jobs");
         } else {
           navigate("/discover");
@@ -56,7 +58,7 @@ export default function Login() {
       }
     } catch (err) {
       console.error(err);
-      setError(isRegistering ? "Registration failed. Email might differ." : "Invalid Email or Password");
+      setError(isRegistering ? "Registration failed. " + (err.message || "") : "Invalid Username or Password");
     }
   }
 
@@ -74,100 +76,131 @@ export default function Login() {
 
           {/* LEFT SIDE: Active Form (Login or Register) */}
           <div className="login">
-            <div className="container">
-              <h1>{isRegistering ? "Create Account" : "Log in"}</h1>
+            <h1>{isRegistering ? "Join Us Today" : "Welcome Back"}</h1>
+            <p className="subtitle">
+              {isRegistering
+                ? "Experience the future of freelancing. Create your account."
+                : "Log in to your account and continue your journey."}
+            </p>
 
-              <form onSubmit={handleSubmit}>
-                {isRegistering && (
-                  <>
-                    <input
-                      type="text"
-                      placeholder="Full Name"
-                      value={name}
-                      onChange={e => setName(e.target.value)}
-                      required
-                    />
-                    <input
-                      type="text"
-                      placeholder="Username"
-                      value={userName}
-                      onChange={e => setUserName(e.target.value)}
-                      required
-                    />
-                    <div className="role-select-wrapper">
-                      <label className="role-label" style={{ textAlign: 'left' }}>I want to:</label>
-                      <select
-                        className="role-select"
-                        value={role}
-                        onChange={e => setRole(e.target.value)}
-                      >
-                        <option value="FREELANCER">Work as a Freelancer</option>
-                        <option value="CLIENT">Hire Talent (Client)</option>
-                      </select>
-                    </div>
-                  </>
-                )}
+            <form onSubmit={handleSubmit}>
+              {isRegistering && (
+                <>
+                  <input
+                    type="text"
+                    placeholder="Full Name"
+                    value={name}
+                    onChange={e => setName(e.target.value)}
+                    required
+                  />
+                  <input
+                    type="text"
+                    placeholder="Username"
+                    value={userName}
+                    onChange={e => setUserName(e.target.value)}
+                    required
+                  />
+                  <div className="role-select-wrapper">
+                    <label className="role-label" style={{ textAlign: 'left' }}>I want to:</label>
+                    <select
+                      className="role-select"
+                      value={role}
+                      onChange={e => setRole(e.target.value)}
+                    >
+                      <option value="FREELANCER">Work as a Freelancer</option>
+                      <option value="CLIENT">Hire Talent (Client)</option>
+                    </select>
+                  </div>
+                </>
+              )}
 
+              <input
+                type={isRegistering ? "email" : "text"}
+                placeholder={isRegistering ? "Email Address" : "Username or Email"}
+                value={email}
+                onChange={e => setEmail(e.target.value)}
+                required
+              />
+              <div className="password-input-wrapper">
                 <input
-                  type="email"
-                  placeholder="Email"
-                  value={email}
-                  onChange={e => setEmail(e.target.value)}
-                  required
-                />
-                <input
-                  type="password"
+                  type={showPassword ? "text" : "password"}
                   placeholder="Password"
                   value={password}
                   onChange={e => setPassword(e.target.value)}
                   required
                 />
+                <i
+                  className={`fas ${showPassword ? 'fa-eye-slash' : 'fa-eye'} password-toggle`}
+                  onClick={() => setShowPassword(!showPassword)}
+                ></i>
+              </div>
 
-                {error && <p style={{ color: 'red', marginTop: 10 }}>{error}</p>}
+              {error && <p style={{ color: '#ef4444', fontSize: '0.875rem', marginTop: '0.5rem' }}>{error}</p>}
 
-                <br />
-                {!isRegistering && (
-                  <>
+              {!isRegistering && (
+                <div className="login-options">
+                  <label className="remember-me">
                     <input type="checkbox" id="rememberMe" />
-                    <label htmlFor="rememberMe">Remember me</label>
-                    <a href="#">Forgot password?</a>
-                  </>
-                )}
+                    <span>Remember me</span>
+                  </label>
+                  <a href="/forgot-password" className="forgot-password">Forgot password?</a>
+                </div>
+              )}
 
-                <button type="submit" style={{ marginTop: 20 }}>
-                  {isRegistering ? "Register Now" : "Log in"}
+              <button type="submit">
+                {isRegistering ? "Get Started" : "Sign In"}
+              </button>
+            </form>
+
+            <div className="social-login">
+              <div className="social-divider">
+                <span>Or continue with</span>
+              </div>
+
+              <div className="social-buttons">
+                <button
+                  type="button"
+                  className="social-btn google"
+                  onClick={() => window.location.href = 'http://localhost:8082/oauth2/authorization/google'}
+                >
+                  <i className="fab fa-google"></i>
+                  <span>Sign in with Google</span>
                 </button>
-              </form>
 
-              <hr />
-              <p>Or Connect With</p>
-              <hr />
+                <button
+                  type="button"
+                  className="social-btn github"
+                  onClick={() => window.location.href = 'http://localhost:8082/oauth2/authorization/github'}
+                >
+                  <i className="fab fa-github"></i>
+                  <span>Sign in with GitHub</span>
+                </button>
+              </div>
 
-              <ul>
-                <li><i className="fab fa-facebook-f fa-2x"></i></li>
-                <li><i className="fab fa-twitter fa-2x"></i></li>
-                <li><i className="fab fa-github fa-2x"></i></li>
-                <li><i className="fab fa-linkedin-in fa-2x"></i></li>
-              </ul>
-
-              <div className="clearfix"></div>
+              <div className="minor-socials">
+                <button type="button" className="minor-btn" title="Sign in with Apple">
+                  <i className="fab fa-apple"></i>
+                </button>
+                <button type="button" className="minor-btn" title="Sign in with LinkedIn">
+                  <i className="fab fa-linkedin-in"></i>
+                </button>
+              </div>
             </div>
           </div>
 
-          {/* RIGHT SIDE: Green Toggle Panel */}
-          <div className="register">
-            <div className="container">
-              <i className={`fas ${isRegistering ? 'fa-user-check' : 'fa-user-plus'} fa-5x`}></i>
-              <h2>{isRegistering ? "Welcome Back!" : "Hello, friend!"}</h2>
-              <p style={{ marginTop: 20, marginBottom: 30 }}>
-                {isRegistering
-                  ? "To keep connected with us please login with your personal info."
-                  : "Enter your personal details and start your journey with us."}
-              </p>
-              <button onClick={toggleMode}>
-                {isRegistering ? "Log In" : "Register"} <i className="fas fa-arrow-circle-right"></i>
-              </button>
-            </div>
+          {/* RIGHT SIDE: Dynamic Info Panel */}
+          <div className="register" style={{ order: isRegistering ? -1 : 1 }}>
+            <i className={`fas ${isRegistering ? 'fa-rocket' : 'fa-fingerprint'}`}></i>
+            <h2>{isRegistering ? "Already One of Us?" : "New Here?"}</h2>
+            <p>
+              {isRegistering
+                ? "To keep connected with us please login with your personal info."
+                : "Enter your personal details and start your journey with us."}
+            </p>
+            <button onClick={toggleMode}>
+              {isRegistering ? "Sign In Instead" : "Create Account"}
+              <i className="fas fa-arrow-right"></i>
+            </button>
           </div>
 
         </div>

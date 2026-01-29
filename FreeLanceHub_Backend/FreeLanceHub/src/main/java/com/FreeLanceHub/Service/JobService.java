@@ -10,14 +10,14 @@ import com.FreeLanceHub.Entity.JobStatus;
 
 @Service
 public interface JobService {
-	
+
 	public JobDto saveJob(Job job);
 
 	// Update an existing job
 	public JobDto updateJob(Long jobId, JobDto jobDto);
 
-	// Delete a job by ID
-	public void deleteJob(Long jobId);
+	// Delete a job by ID (with ownership validation)
+	public void deleteJob(Long jobId, Long currentUserId);
 
 	// Get a job by ID
 	public JobDto getJobById(Long jobId);
@@ -25,12 +25,15 @@ public interface JobService {
 	// Get all jobs with a specific status
 	public List<JobDto> getJobsByStatus(JobStatus status);
 
-    // Get jobs by Client ID
-    public List<JobDto> getJobsByClient(Long clientId);
+	// Get jobs by Client ID
+	public List<JobDto> getJobsByClient(Long clientId);
+
+	public List<JobDto> getJobsByFreelancer(Long freelancerId);
 
 	// Search jobs by title/description (Simple)
 	public List<JobDto> searchJobs(String keyword);
 
 	// Advanced Search
-	public List<JobDto> searchJobsAdvanced(String title, String description, List<String> skills, Double minBudget, Double maxBudget, String duration);
+	public List<JobDto> searchJobsAdvanced(String title, String description, List<String> skills, Double minBudget,
+			Double maxBudget, String duration);
 }

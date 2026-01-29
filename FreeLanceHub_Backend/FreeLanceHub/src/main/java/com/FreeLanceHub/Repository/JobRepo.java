@@ -12,13 +12,16 @@ import org.springframework.stereotype.Repository;
 public interface JobRepo extends JpaRepository<Job, Long>, JpaSpecificationExecutor<Job> {
 
     List<Job> findByStatus(JobStatus status);
-    
+
     List<Job> findByClientId(Long clientId);
 
     List<Job> findByAssignedFreelancerId(Long freelancerId);
 
+    List<Job> findByStatusAndTitleContainingIgnoreCaseOrStatusAndDescriptionContainingIgnoreCase(
+            JobStatus status1, String titleKeyword,
+            JobStatus status2, String descriptionKeyword);
+
     List<Job> findByTitleContainingIgnoreCaseOrDescriptionContainingIgnoreCase(
             String titleKeyword,
-            String descriptionKeyword
-    );
+            String descriptionKeyword);
 }

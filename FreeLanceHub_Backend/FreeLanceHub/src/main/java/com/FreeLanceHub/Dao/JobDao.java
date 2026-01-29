@@ -7,7 +7,7 @@ import com.FreeLanceHub.Entity.Job;
 import com.FreeLanceHub.Entity.JobStatus;
 
 public interface JobDao {
-	
+
 	public Boolean saveJob(Job job);
 
 	// Update an existing job
@@ -22,8 +22,11 @@ public interface JobDao {
 	// Get all jobs with a specific status
 	public List<Job> getJobsByStatus(JobStatus status);
 
-    // Get jobs by Client ID
-    public List<Job> findByClientId(Long clientId);
+	// Get jobs by Client ID
+	public List<Job> findByClientId(Long clientId);
+
+	// Get jobs by Freelancer ID
+	public List<Job> findByAssignedFreelancerId(Long freelancerId);
 
 	// Search jobs by title or description
 	public List<Job> searchJobs(String keyword);

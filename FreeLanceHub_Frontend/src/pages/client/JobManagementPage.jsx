@@ -1,10 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import Navbar from "../../components/others/Navbar";
 import "../../pages/dashboard.css";
 import JobCard from "../../components/job/JobCard";
 import JobFormStepper from "../../components/job/JobFormStepper";
 import PaymentModal from "../../components/common/PaymentModal";
-import { getJobs, getJobsByClient, createJob, updateJob, deleteJob } from "../../services/api"; // Switched to Real API
+import ReviewModal from "../../components/common/ReviewModal";
+import { getJobs, getJobsByClient, createJob, updateJob, deleteJob, submitReview } from "../../services/api";
 
 export default function JobManagementPage() {
   const [jobs, setJobs] = useState([]);
@@ -13,10 +15,19 @@ export default function JobManagementPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingJob, setEditingJob] = useState(null);
   const [viewJob, setViewJob] = useState(null);
+  const [reviewJob, setReviewJob] = useState(null);
+  const [searchParams, setSearchParams] = useSearchParams();
 
   useEffect(() => {
-    // initMockDb(); // Removed
     load();
+
+    // Auto-open create modal if action=create in URL
+    if (searchParams.get('action') === 'create') {
+      setIsModalOpen(true);
+      setEditingJob(null);
+      // Remove the parameter after opening
+      setSearchParams({});
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -121,7 +132,33 @@ export default function JobManagementPage() {
   }
 
   function handleView(job) {
-    setViewJob(job);
+    if (job.status?.toUpperCase() === "COMPLETED") {
+      setReviewJob(job);
+    } else {
+      setViewJob(job);
+    }
+  }
+
+  async function processReview(reviewData) {
+    if (!reviewJob) return;
+    try {
+      const user = JSON.parse(localStorage.getItem("user"));
+      // Assuming revieweeId is the freelancer assigned to this job
+      // In a real app, the job object would have `assignedFreelancerId`
+      // We'll try to find it from some field or just use 1 if null for demo
+      const payload = {
+        jobId: reviewJob.id,
+        reviewerId: user.id,
+        revieweeId: reviewJob.assignedFreelancerId || 1,
+        rating: reviewData.rating,
+        comment: reviewData.comment
+      };
+      await submitReview(payload);
+      setReviewJob(null);
+      alert("Thank you for your review!");
+    } catch (err) {
+      alert("Failed to submit review: " + err.message);
+    }
   }
 
   return (
@@ -275,13 +312,21 @@ export default function JobManagementPage() {
           </div>
         </div>
       )}
-      {/* PAYMENT MODAL */}
       {
         paymentJob && (
           <PaymentModal
             job={paymentJob}
             onConfirm={processPayment}
             onCancel={() => setPaymentJob(null)}
+          />
+        )
+      }
+      {
+        reviewJob && (
+          <ReviewModal
+            job={reviewJob}
+            onConfirm={processReview}
+            onCancel={() => setReviewJob(null)}
           />
         )
       }

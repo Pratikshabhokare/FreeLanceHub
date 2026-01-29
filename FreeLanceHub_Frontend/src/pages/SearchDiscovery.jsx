@@ -1,9 +1,22 @@
 import { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { searchJobs, searchFreelancers, getCurrentUser, submitProposal } from '../services/api';
 import ProposalForm from '../components/proposals/ProposalForm';
+import Navbar from '../components/others/Navbar';
+import Footer from '../components/others/Footer';
+import './SearchDiscovery.css';
 
 export default function SearchDiscovery() {
-  const [searchType, setSearchType] = useState('freelancers');
+  const location = useLocation();
+  const queryParams = new URLSearchParams(location.search);
+  const initialType = queryParams.get('type') === 'jobs' ? 'jobs' : 'freelancers';
+
+  const [searchType, setSearchType] = useState(initialType);
+
+  useEffect(() => {
+    const type = queryParams.get('type');
+    if (type) setSearchType(type === 'jobs' ? 'jobs' : 'freelancers');
+  }, [location.search]);
   const [filters, setFilters] = useState({
     searchQuery: '',
     category: '',
@@ -22,18 +35,14 @@ export default function SearchDiscovery() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedJob, setSelectedJob] = useState(null);
 
-  // Mock data for dropdowns (could be fetched from backend)
   const categories = ['Web Development', 'Mobile Apps', 'Design', 'Writing', 'Marketing', 'Data Science'];
-  const experienceLevels = ['Entry Level', 'Intermediate', 'Expert'];
-  const sortOptions = ['Relevance', 'Newest', 'Price: Low to High', 'Price: High to Low', 'Rating'];
 
   useEffect(() => {
-    // Debounce search to avoid too many requests
     const timeoutId = setTimeout(() => {
       performSearch();
     }, 500);
     return () => clearTimeout(timeoutId);
-  }, [filters.searchQuery, searchType]);
+  }, [filters.searchQuery, searchType, filters.category]);
 
   async function performSearch() {
     setLoading(true);
@@ -41,10 +50,8 @@ export default function SearchDiscovery() {
     try {
       let data = [];
       if (searchType === 'freelancers') {
-        // Backend search by skills and filters
         data = await searchFreelancers(filters);
       } else {
-        // Backend search by keyword and filters
         data = await searchJobs(filters);
       }
       setResults(data || []);
@@ -77,376 +84,214 @@ export default function SearchDiscovery() {
   async function handleProposalSubmit(formData) {
     try {
       const user = getCurrentUser();
-      // Construct payload expected by backend Logic
       const payload = {
         jobId: formData.jobId,
         bidAmount: formData.bidAmount,
-        message: formData.coverLetter // Mapping coverLetter to message
+        message: formData.coverLetter
       };
 
       await submitProposal(user.id, payload);
       alert("Proposal submitted successfully!");
       setIsModalOpen(false);
-      setSelectedJob(null);
     } catch (err) {
       console.error(err);
       alert("Failed to submit proposal: " + err.message);
     }
   }
 
-  // Helper to map API data to UI format
-  const mappedResults = results.map(item => {
-    if (searchType === 'freelancers') {
-      // Freelancer Map
-      return {
-        id: item.freelancer?.id,
-        name: item.freelancer?.name || 'Unknown',
-        title: item.title || 'Freelancer',
-        rate: item.hourlyRate || 0,
-        rating: 5.0, // Mock for now
-        reviews: 0, // Mock for now
-        category: 'General', // Mock
-        experience: item.experience + ' Years',
-        image: `https://ui-avatars.com/api/?name=${encodeURIComponent(item.freelancer?.name || 'F')}&background=random`,
-        skills: item.skills
-      };
-    } else {
-      // Job Map
-      return {
-        id: item.id,
-        title: item.title,
-        budget: item.budgetMax ? `${item.budgetMin} - ${item.budgetMax}` : item.budgetMin,
-        category: 'General',
-        posted: 'Recently',
-        proposals: 0, // Mock
-        category: 'General',
-        posted: 'Recently',
-        proposals: 0, // Mock
-        description: item.description,
-        status: item.status
-      };
-    }
-  });
+  // Helper for freelancer avatars
+  const profileImages = [
+    "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=200&h=200&fit=crop",
+    "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=200&h=200&fit=crop",
+    "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=200&h=200&fit=crop",
+    "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=200&h=200&fit=crop",
+    "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&h=200&fit=crop"
+  ];
 
   return (
-    <div style={{
-      maxWidth: '1400px',
-      margin: '0 auto',
-      padding: '20px',
-      fontFamily: '"Inter", sans-serif'
-    }}>
-      {/* Header */}
-      <div style={{ marginBottom: '30px' }}>
-        <h1 style={{ fontSize: '2.5em', margin: '0 0 10px 0', color: '#111827' }}>
-          Search & Discovery
-        </h1>
-        <p style={{ color: '#6b7280', fontSize: '1.1em' }}>
-          Find the perfect freelancer or project for your needs
-        </p>
-      </div>
+    <>
+      <Navbar />
+      <div className="discovery-container">
+        <header className="discovery-header">
+          <h1>Find Your Next Big Solution</h1>
+          <p>Whether you're looking for top-tier talent or your dream project, we've got you covered.</p>
+        </header>
 
-      {/* Search Type Toggle */}
-      <div style={{
-        display: 'flex',
-        gap: '10px',
-        marginBottom: '30px',
-        background: 'white',
-        padding: '6px',
-        borderRadius: '12px',
-        boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-        width: 'fit-content'
-      }}>
-        <button
-          onClick={() => setSearchType('freelancers')}
-          style={{
-            padding: '10px 24px',
-            background: searchType === 'freelancers' ? '#10b981' : 'transparent',
-            color: searchType === 'freelancers' ? 'white' : '#6b7280',
-            border: 'none',
-            borderRadius: '8px',
-            cursor: 'pointer',
-            fontSize: '1em',
-            fontWeight: '600',
-            transition: 'all 0.2s'
-          }}
-        >
-          🧑‍💼 Talent
-        </button>
-        <button
-          onClick={() => setSearchType('jobs')}
-          style={{
-            padding: '10px 24px',
-            background: searchType === 'jobs' ? '#10b981' : 'transparent',
-            color: searchType === 'jobs' ? 'white' : '#6b7280',
-            border: 'none',
-            borderRadius: '8px',
-            cursor: 'pointer',
-            fontSize: '1em',
-            fontWeight: '600',
-            transition: 'all 0.2s'
-          }}
-        >
-          💼 Jobs
-        </button>
-      </div>
+        <div className="discovery-tabs">
+          <button
+            className={`tab-btn ${searchType === 'freelancers' ? 'active' : ''}`}
+            onClick={() => setSearchType('freelancers')}
+          >
+            <i className="fas fa-user-tie"></i> Find Talent
+          </button>
+          <button
+            className={`tab-btn ${searchType === 'jobs' ? 'active' : ''}`}
+            onClick={() => setSearchType('jobs')}
+          >
+            <i className="fas fa-briefcase"></i> Find Jobs
+          </button>
+        </div>
 
-      {/* Main Search Bar */}
-      <div style={{
-        background: 'white',
-        padding: '20px',
-        borderRadius: '16px',
-        boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
-        marginBottom: '30px'
-      }}>
-        <input
-          type="text"
-          placeholder={searchType === 'freelancers' ? 'Search by skills (e.g. Java, React)...' : 'Search for jobs...'}
-          value={filters.searchQuery}
-          onChange={(e) => handleFilterChange('searchQuery', e.target.value)}
-          style={{
-            width: '100%',
-            padding: '16px 20px',
-            fontSize: '1.1em',
-            border: '2px solid #e5e7eb',
-            borderRadius: '12px',
-            outline: 'none',
-            transition: 'border 0.2s'
-          }}
-          onFocus={(e) => e.target.style.borderColor = '#10b981'}
-          onBlur={(e) => e.target.style.borderColor = '#e5e7eb'}
-        />
-      </div>
+        <div className="search-wrapper">
+          <i className="fas fa-search search-icon-float"></i>
+          <input
+            type="text"
+            className="search-input"
+            placeholder={searchType === 'freelancers' ? 'Search by skills, names or titles...' : 'Search for project keywords...'}
+            value={filters.searchQuery}
+            onChange={(e) => handleFilterChange('searchQuery', e.target.value)}
+          />
+        </div>
 
-      {/* Filters and Results Layout */}
-      <div style={{ display: 'grid', gridTemplateColumns: '280px 1fr', gap: '30px' }}>
-        {/* Filters Sidebar (Visual only for now as backend filtering is basic) */}
-        <div>
-          <div style={{
-            background: 'white',
-            padding: '25px',
-            borderRadius: '16px',
-            boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-            position: 'sticky',
-            top: '20px'
-          }}>
-            <h3 style={{ marginTop: 0, fontSize: '1.25em', color: '#111827', marginBottom: 20 }}>Filters</h3>
-            {/* Category Filter */}
-            <div style={{ marginBottom: '25px' }}>
-              <label style={{ display: 'block', fontWeight: '600', marginBottom: '10px', color: '#4b5563' }}>
-                Category
-              </label>
+        <div className="discovery-content">
+          <aside className="filters-sidebar">
+            <h3><i className="fas fa-sliders-h"></i> Filters</h3>
+
+            <div className="filter-group">
+              <label>Category</label>
               <select
                 value={filters.category}
                 onChange={(e) => handleFilterChange('category', e.target.value)}
-                style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #e5e7eb' }}>
+              >
                 <option value="">All Categories</option>
                 {categories.map(c => <option key={c} value={c}>{c}</option>)}
               </select>
             </div>
-            {/* Price Range */}
-            <div style={{ marginBottom: '25px' }}>
-              <label style={{ display: 'block', fontWeight: '600', marginBottom: '10px', color: '#4b5563' }}>
-                {searchType === 'freelancers' ? 'Max Hourly Rate ($)' : 'Budget Range ($)'}
-              </label>
-              <div style={{ display: 'flex', gap: 10 }}>
-                <input
-                  type="number"
-                  placeholder="Min"
-                  value={filters.minPrice}
-                  onChange={(e) => handleFilterChange('minPrice', e.target.value)}
-                  style={{ width: '50%', padding: '8px', borderRadius: 6, border: '1px solid #e5e7eb' }}
-                />
-                <input
-                  type="number"
-                  placeholder="Max"
-                  value={filters.maxPrice}
-                  onChange={(e) => handleFilterChange('maxPrice', e.target.value)}
-                  style={{ width: '50%', padding: '8px', borderRadius: 6, border: '1px solid #e5e7eb' }}
-                />
+
+            <div className="filter-group">
+              <label>{searchType === 'freelancers' ? 'Max Hourly Rate ($)' : 'Budget Range ($)'}</label>
+              <div className="price-inputs">
+                <input type="number" placeholder="Min" value={filters.minPrice} onChange={(e) => handleFilterChange('minPrice', e.target.value)} />
+                <input type="number" placeholder="Max" value={filters.maxPrice} onChange={(e) => handleFilterChange('maxPrice', e.target.value)} />
               </div>
             </div>
-            <button
-              onClick={() => setFilters({ ...filters, searchQuery: '' })}
-              style={{
-                width: '100%',
-                padding: '12px',
-                background: '#f3f4f6',
-                color: '#374151',
-                border: 'none',
-                borderRadius: '8px',
-                cursor: 'pointer',
-                fontWeight: '600'
-              }}
-            >
-              Clear Search
-            </button>
-          </div>
-        </div>
 
-        {/* Results Area */}
-        <div>
-          <div style={{ marginBottom: '20px' }}>
-            <h3 style={{ margin: 0, color: '#111827' }}>
-              {loading ? 'Searching...' : `${results.length} results found`}
-            </h3>
-          </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-            {loading && <div>Loading...</div>}
-            {!loading && mappedResults.length === 0 && (
-              <div style={{ padding: 40, textAlign: 'center', color: '#6b7280', background: 'white', borderRadius: 12 }}>
-                No results found. Try a different query.
+            <button className="clear-btn" onClick={() => setFilters({ ...filters, searchQuery: '', category: '', minPrice: '', maxPrice: '' })}>
+              Reset Filters
+            </button>
+          </aside>
+
+          <main className="results-main">
+            <div className="results-info">
+              {loading ? 'Scanning marketplace...' : <>Found <span>{results.length}</span> matching {searchType}</>}
+            </div>
+
+            {loading ? (
+              <div className="discovery-loader">
+                <div className="spinner"></div>
+                <p>Loading the best matching results...</p>
+              </div>
+            ) : (
+              <div className="results-list">
+                {results.length === 0 && (
+                  <div className="no-results-card">
+                    <i className="fas fa-search"></i>
+                    <h4>No results found</h4>
+                    <p>Try adjusting your search criteria or filters.</p>
+                  </div>
+                )}
+
+                {searchType === 'freelancers' ? (
+                  results.map((f, idx) => (
+                    <div key={f.id || idx} className="result-card">
+                      <div className="card-visual">
+                        <img
+                          src={profileImages[idx % profileImages.length]}
+                          className="freelancer-avatar"
+                          alt={f.freelancer?.name}
+                        />
+                      </div>
+                      <div className="card-info">
+                        <div className="card-title-meta">
+                          <h4>{f.freelancer?.name || 'Talented Professional'}</h4>
+                          <span className="talent-status"><i className="fas fa-check-circle"></i> Available</span>
+                        </div>
+                        <p className="card-description">{f.bio || `Specialized in ${f.title || 'Freelancing'}. Highly experienced specialist with a proven track record of successful projects.`}</p>
+                        <div className="card-tags">
+                          {(f.skills || 'Generalist').split(',').map((skill, i) => (
+                            <span key={i} className="tag-badge">{skill.trim()}</span>
+                          ))}
+                        </div>
+                      </div>
+                      <div className="card-actions">
+                        <div className="card-rate">
+                          <span className="rate-value">${f.hourlyRate || 25}</span>
+                          <span className="rate-label">per hour</span>
+                        </div>
+                        <div className="card-stats">
+                          <i className="fas fa-star"></i> 5.0 (24 reviews)
+                        </div>
+                        <div className="card-actions-buttons">
+                          <button
+                            className="btn-outline"
+                            onClick={() => navigate(`/profile/${f.freelancerId}`)}
+                          >
+                            View Profile
+                          </button>
+                          <button
+                            className="btn-primary"
+                            onClick={() => navigate(`/profile/${f.freelancerId}`)} // Profile handles chat start
+                          >
+                            Quick Message
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  results.map((j) => (
+                    <div key={j.id} className="result-card">
+                      <div className="card-visual">
+                        <div className="job-icon-box">
+                          <i className="fas fa-laptop-code"></i>
+                        </div>
+                      </div>
+                      <div className="card-info">
+                        <div className="card-title-meta">
+                          <h4>{j.title}</h4>
+                        </div>
+                        <p className="card-description">{j.description}</p>
+                        <div className="card-tags">
+                          <span className="tag-badge"><i className="fas fa-clock"></i> Posted Today</span>
+                          <span className="tag-badge"><i className="fas fa-users"></i> {j.proposals || 0} proposals</span>
+                        </div>
+                      </div>
+                      <div className="card-actions">
+                        <div className="card-rate">
+                          <span className="rate-value">${j.budgetMax || j.budgetMin || j.budget || 'Negotiable'}</span>
+                          <span className="rate-label">{j.budgetType || 'Fixed Budget'}</span>
+                        </div>
+                        <button
+                          className="apply-btn"
+                          onClick={() => handleApplyClick(j)}
+                          disabled={j.status !== 'OPEN'}
+                        >
+                          {j.status === 'OPEN' ? 'Submit Proposal' : 'Job Closed'}
+                        </button>
+                      </div>
+                    </div>
+                  ))
+                )}
               </div>
             )}
-            {!loading && searchType === 'freelancers' ? (
-              // Freelancer Cards
-              mappedResults.map(freelancer => (
-                <div
-                  key={freelancer.id}
-                  style={{
-                    background: 'white',
-                    padding: '25px',
-                    borderRadius: '16px',
-                    boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-                    transition: 'all 0.2s',
-                    cursor: 'pointer',
-                    border: '1px solid transparent'
-                  }}
-                  onMouseOver={(e) => {
-                    e.currentTarget.style.transform = 'translateY(-2px)';
-                    e.currentTarget.style.boxShadow = '0 10px 15px -3px rgba(0, 0, 0, 0.1)';
-                    e.currentTarget.style.borderColor = '#10b981';
-                  }}
-                  onMouseOut={(e) => {
-                    e.currentTarget.style.transform = 'translateY(0)';
-                    e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)';
-                    e.currentTarget.style.borderColor = 'transparent';
-                  }}
-                >
-                  <div style={{ display: 'flex', gap: '20px', alignItems: 'center' }}>
-                    <img
-                      src={freelancer.image}
-                      alt={freelancer.name}
-                      style={{ width: '80px', height: '80px', borderRadius: '50%', objectFit: 'cover' }}
-                    />
-                    <div style={{ flex: 1 }}>
-                      <h4 style={{ margin: '0 0 4px 0', fontSize: '1.25em', color: '#111827' }}>
-                        {freelancer.name}
-                      </h4>
-                      <p style={{ margin: '0 0 10px 0', color: '#059669', fontWeight: '600' }}>
-                        {freelancer.title}
-                      </p>
-                      <p style={{ fontSize: '0.9em', color: '#4b5563', margin: 0 }}>
-                        Skills: {freelancer.skills}
-                      </p>
-                    </div>
-                    <div style={{ textAlign: 'right' }}>
-                      <div style={{ fontSize: '1.5em', fontWeight: 'bold', color: '#111827' }}>
-                        ${freelancer.rate}<span style={{ fontSize: '0.6em', color: '#6b7280' }}>/hr</span>
-                      </div>
-                      <div style={{ marginTop: 5, fontSize: '0.9em', color: '#4b5563' }}>
-                        {freelancer.experience} Exp
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              ))
-            ) : (
-              // Job Cards
-              !loading && mappedResults.map(job => (
-                <div
-                  key={job.id}
-                  style={{
-                    background: 'white',
-                    padding: '25px',
-                    borderRadius: '16px',
-                    boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-                    transition: 'all 0.2s',
-                    cursor: 'pointer',
-                    border: '1px solid transparent'
-                  }}
-                  onMouseOver={(e) => {
-                    e.currentTarget.style.transform = 'translateY(-2px)';
-                    e.currentTarget.style.boxShadow = '0 10px 15px -3px rgba(0, 0, 0, 0.1)';
-                    e.currentTarget.style.borderColor = '#10b981';
-                  }}
-                  onMouseOut={(e) => {
-                    e.currentTarget.style.transform = 'translateY(0)';
-                    e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)';
-                    e.currentTarget.style.borderColor = 'transparent';
-                  }}
-                >
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
-                    <div style={{ flex: 1 }}>
-                      <h4 style={{ margin: '0 0 8px 0', fontSize: '1.25em', color: '#111827' }}>
-                        {job.title}
-                      </h4>
-                      <p style={{ color: '#4b5563', fontSize: '0.95em', marginBottom: 15, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
-                        {job.description}
-                      </p>
-                      <div style={{ display: 'flex', gap: '15px', fontSize: '0.9em', color: '#6b7280' }}>
-                        <span style={{ fontWeight: 600, color: '#059669' }}>💰 ${job.budget}</span>
-                        <span>📂 {job.category}</span>
-                      </div>
-                    </div>
-                    <button
-                      disabled={job.status !== 'OPEN'}
-                      style={{
-                        padding: '10px 20px',
-                        background: job.status === 'OPEN' ? '#10b981' : '#9ca3af',
-                        color: 'white',
-                        border: 'none',
-                        borderRadius: '8px',
-                        cursor: job.status === 'OPEN' ? 'pointer' : 'not-allowed',
-                        fontSize: '0.9em',
-                        fontWeight: '600'
-                      }}>
-                      {job.status === 'OPEN' ? 'Apply' : 'Closed'}
-                    </button>
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
+          </main>
         </div>
-      </div>
 
-      {/* Proposal Modal */}
-      {isModalOpen && selectedJob && (
-        <div style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          background: 'rgba(0,0,0,0.5)',
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          zIndex: 1000
-        }}
-          onClick={() => setIsModalOpen(false)}
-        >
-          <div style={{
-            background: 'white',
-            padding: '20px',
-            borderRadius: '16px',
-            maxWidth: '600px',
-            width: '95%',
-            maxHeight: '90vh',
-            overflowY: 'auto'
-          }}
-            onClick={e => e.stopPropagation()}
-          >
-            <h2 style={{ marginTop: 0, color: '#111827' }}>Submit Proposal: {selectedJob.title}</h2>
-            <ProposalForm
-              jobOptions={[selectedJob]}
-              initialValue={{ jobId: selectedJob.id }}
-              onSubmit={handleProposalSubmit}
-              onCancel={() => setIsModalOpen(false)}
-            />
+        {isModalOpen && selectedJob && (
+          <div className="modal-overlay" onClick={() => setIsModalOpen(false)}>
+            <div className="modal-card" onClick={e => e.stopPropagation()}>
+              <h2>Submit Proposal for {selectedJob.title}</h2>
+              <ProposalForm
+                jobOptions={[selectedJob]}
+                initialValue={{ jobId: selectedJob.id }}
+                onSubmit={handleProposalSubmit}
+                onCancel={() => setIsModalOpen(false)}
+              />
+            </div>
           </div>
-        </div>
-      )}
-    </div>
+        )}
+      </div>
+      <Footer />
+    </>
   );
 }

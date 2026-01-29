@@ -10,12 +10,13 @@ import com.FreeLanceHub.Dto.JobDto;
 import com.FreeLanceHub.Entity.Job;
 import com.FreeLanceHub.Entity.JobStatus;
 import com.FreeLanceHub.Service.JobService;
+
 @Service
 public class JobServiceImpl implements JobService {
 
     @Autowired
     private JobDao jobDao;
-    
+
     @Autowired
     private com.FreeLanceHub.Dao.UserDao userDao;
 
@@ -29,7 +30,7 @@ public class JobServiceImpl implements JobService {
                 throw new RuntimeException("Client User not found with ID: " + job.getClient().getId());
             }
         } else {
-             throw new RuntimeException("Job must have a Client ID");
+            throw new RuntimeException("Job must have a Client ID");
         }
         jobDao.saveJob(job);
         return mapToDto(job);
@@ -37,13 +38,37 @@ public class JobServiceImpl implements JobService {
 
     @Override
     public JobDto updateJob(Long jobId, JobDto jobDto) {
+        Job existingJob = jobDao.getJobById(jobId);
+        if (existingJob == null) {
+            throw new RuntimeException("Job not found with ID: " + jobId);
+        }
+
+        // Validate ownership - only allow update if user is the job creator
+        // Note: In a real app, you'd get the current user from SecurityContext
+        // For now, we'll check if the client ID matches
+        if (jobDto.getClientId() != null && existingJob.getClient() != null) {
+            if (!existingJob.getClient().getId().equals(jobDto.getClientId())) {
+                throw new RuntimeException("Unauthorized: You can only edit jobs you created");
+            }
+        }
+
         jobDao.updateJob(jobId, jobDto);
         Job updatedJob = jobDao.getJobById(jobId);
         return mapToDto(updatedJob);
     }
 
     @Override
-    public void deleteJob(Long jobId) {
+    public void deleteJob(Long jobId, Long currentUserId) {
+        Job existingJob = jobDao.getJobById(jobId);
+        if (existingJob == null) {
+            throw new RuntimeException("Job not found with ID: " + jobId);
+        }
+
+        // Validate ownership - only allow deletion if user is the job creator
+        if (existingJob.getClient() == null || !existingJob.getClient().getId().equals(currentUserId)) {
+            throw new RuntimeException("Unauthorized: You can only delete jobs you created");
+        }
+
         jobDao.deleteJob(jobId);
     }
 
@@ -69,6 +94,14 @@ public class JobServiceImpl implements JobService {
     }
 
     @Override
+    public List<JobDto> getJobsByFreelancer(Long freelancerId) {
+        return jobDao.findByAssignedFreelancerId(freelancerId)
+                .stream()
+                .map(this::mapToDto)
+                .toList();
+    }
+
+    @Override
     public List<JobDto> searchJobs(String keyword) {
         return jobDao.searchJobs(keyword)
                 .stream()
@@ -77,10 +110,12 @@ public class JobServiceImpl implements JobService {
     }
 
     @Override
-    public List<JobDto> searchJobsAdvanced(String title, String description, List<String> skills, Double minBudget, Double maxBudget, String duration) {
+    public List<JobDto> searchJobsAdvanced(String title, String description, List<String> skills, Double minBudget,
+            Double maxBudget, String duration) {
         return jobDao.searchJobsAdvanced(
-                com.FreeLanceHub.Specification.JobSpecification.filterJobs(title, description, skills, minBudget, maxBudget, duration)
-        ).stream().map(this::mapToDto).toList();
+                com.FreeLanceHub.Specification.JobSpecification.filterJobs(title, description, skills, minBudget,
+                        maxBudget, duration))
+                .stream().map(this::mapToDto).toList();
     }
 
     // ------------------ MAPPER ------------------
@@ -97,6 +132,13 @@ public class JobServiceImpl implements JobService {
         dto.setBudgetType(job.getBudgetType());
         dto.setBudgetMin(job.getBudgetMin());
         dto.setBudgetMax(job.getBudgetMax());
+
+        // Include client ID for ownership validation
+        if (job.getClient() != null) {
+            dto.setClientId(job.getClient().getId());
+            dto.setClientName(job.getClient().getName());
+        }
+
         return dto;
     }
 }

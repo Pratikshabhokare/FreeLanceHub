@@ -20,8 +20,8 @@ public class UserDaoImpl implements UserDao {
 
 	@Override
 	public User saveUser(User user) {
-		User userdb=userRepo.save(user);
-		 
+		User userdb = userRepo.save(user);
+
 		return userdb;
 	}
 
@@ -53,7 +53,7 @@ public class UserDaoImpl implements UserDao {
 
 	@Override
 	public User getUserByUserName(String userName) {
-		return userRepo.findUserByUserName(userName);
+		return userRepo.findByUserName(userName);
 	}
 
 	@Override

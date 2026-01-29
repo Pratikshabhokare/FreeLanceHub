@@ -22,6 +22,13 @@ public class User extends BaseEntity {
 
 	private Boolean enabled;
 
+	private String provider;
+	private String providerId;
+	private String profilePicture = "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=200&h=200&fit=crop";
+
+	private String resetToken;
+	private java.time.LocalDateTime resetTokenExpiry;
+
 	public User() {
 		super();
 		// TODO Auto-generated constructor stub
@@ -61,6 +68,7 @@ public class User extends BaseEntity {
 		this.email = email;
 	}
 
+	@JsonIgnore
 	public String getPassword() {
 		return password;
 	}
@@ -83,6 +91,46 @@ public class User extends BaseEntity {
 
 	public void setEnabled(Boolean enabled) {
 		this.enabled = enabled;
+	}
+
+	public String getProvider() {
+		return provider;
+	}
+
+	public void setProvider(String provider) {
+		this.provider = provider;
+	}
+
+	public String getProviderId() {
+		return providerId;
+	}
+
+	public void setProviderId(String providerId) {
+		this.providerId = providerId;
+	}
+
+	public String getProfilePicture() {
+		return profilePicture;
+	}
+
+	public void setProfilePicture(String profilePicture) {
+		this.profilePicture = profilePicture;
+	}
+
+	public String getResetToken() {
+		return resetToken;
+	}
+
+	public void setResetToken(String resetToken) {
+		this.resetToken = resetToken;
+	}
+
+	public java.time.LocalDateTime getResetTokenExpiry() {
+		return resetTokenExpiry;
+	}
+
+	public void setResetTokenExpiry(java.time.LocalDateTime resetTokenExpiry) {
+		this.resetTokenExpiry = resetTokenExpiry;
 	}
 
 	@Override

@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import Navbar from "../../components/others/Navbar";
 import Footer from "../../components/others/Footer";
 import "../dashboard.css";
+import StatusBadge from "../../components/job/StatusBadge";
 
 import ProposalCard from "../../components/proposals/ProposalCard";
 import {
@@ -58,8 +59,8 @@ export default function ClientInboxPage() {
   async function startChat(p) {
     try {
       // p.freelancer.id might need check if it exists in proposal object
-      const chatId = await createOrGetChat(p.job.id, p.freelancer.id, user.id);
-      navigate('/messages');
+      const chat = await createOrGetChat(p.job.id, p.freelancer.id, user.id);
+      navigate('/messages', { state: { selectedChat: chat } });
     } catch (e) {
       console.error("Failed to start chat", e);
       alert("Failed to start chat. Ensure freelancer info is available.");
@@ -122,12 +123,17 @@ export default function ClientInboxPage() {
                   }}
                   onClick={() => setActiveJobId(j.id)}
                 >
-                  <div style={{ display: "flex", justifyContent: "space-between", gap: 10, flexWrap: "wrap" }}>
-                    <div style={{ minWidth: 0 }}>
-                      <div style={{ fontWeight: 700, color: "#111827", overflowWrap: "anywhere" }}>{j.title}</div>
-                      <div className="small" style={{ marginTop: 6 }}>
-                        Status: <span className="kbd">{j.status}</span>
+                  <div style={{ display: "flex", justifyContent: "space-between", gap: 10, flexWrap: "wrap", width: '100%' }}>
+                    <div style={{ minWidth: 0, flex: 1 }}>
+                      <div style={{ fontWeight: 700, color: "#111827", overflowWrap: "anywhere", display: 'flex', alignItems: 'center', gap: 10 }}>
+                        {j.title}
+                        <StatusBadge status={j.status} />
                       </div>
+                      {j.status === "IN_PROGRESS" && j.assignedFreelancer && (
+                        <div className="small" style={{ marginTop: 4, color: '#059669' }}>
+                          Assigned: <strong>{j.assignedFreelancer.name}</strong>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </button>

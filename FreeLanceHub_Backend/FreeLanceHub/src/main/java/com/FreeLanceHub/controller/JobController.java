@@ -39,8 +39,8 @@ public class JobController {
 
 	// 🔹 Delete Job
 	@DeleteMapping("/delete/{jobId}")
-	public String deleteJob(@PathVariable Long jobId) {
-		jobService.deleteJob(jobId);
+	public String deleteJob(@PathVariable Long jobId, @RequestParam Long userId) {
+		jobService.deleteJob(jobId, userId);
 		return "Job deleted successfully";
 	}
 
@@ -56,11 +56,17 @@ public class JobController {
 		return jobService.getJobsByStatus(status);
 	}
 
-    // 🔹 Get Jobs by Client ID
-    @GetMapping("/client/{clientId}")
-    public List<JobDto> getJobsByClient(@PathVariable Long clientId) {
-        return jobService.getJobsByClient(clientId);
-    }
+	// 🔹 Get Jobs by Client ID
+	@GetMapping("/client/{clientId}")
+	public List<JobDto> getJobsByClient(@PathVariable Long clientId) {
+		return jobService.getJobsByClient(clientId);
+	}
+
+	// 🔹 Get Jobs by Freelancer ID
+	@GetMapping("/freelancer/{freelancerId}")
+	public List<JobDto> getJobsByFreelancer(@PathVariable Long freelancerId) {
+		return jobService.getJobsByFreelancer(freelancerId);
+	}
 
 	// 🔹 Search Jobs (Simple & Advanced)
 	@GetMapping("/search")
@@ -71,11 +77,11 @@ public class JobController {
 			@RequestParam(required = false) List<String> skills,
 			@RequestParam(required = false) Double minBudget,
 			@RequestParam(required = false) Double maxBudget,
-			@RequestParam(required = false) String duration
-	) {
-		if (keyword != null && !keyword.isEmpty()) {
-			 return jobService.searchJobs(keyword);
-		}
-		return jobService.searchJobsAdvanced(title, description, skills, minBudget, maxBudget, duration);
+			@RequestParam(required = false) String duration) {
+		// Combine keyword with title/description for broader search
+		String effectiveTitle = (title != null && !title.isEmpty()) ? title : keyword;
+		String effectiveDesc = (description != null && !description.isEmpty()) ? description : keyword;
+
+		return jobService.searchJobsAdvanced(effectiveTitle, effectiveDesc, skills, minBudget, maxBudget, duration);
 	}
 }

@@ -13,23 +13,23 @@ import com.FreeLanceHub.Entity.User;
 @Repository
 public interface UserRepo extends JpaRepository<User, Long> {
 
-	 
+	@Modifying
+	@Query(value = "UPDATE users SET name = ?, email = ?, role = ? WHERE id = ?", nativeQuery = true)
+	int updateUser(String name, String email, Role role, Long id);
 
-	    @Modifying
-	    @Query(value = "UPDATE users SET name = ?, email = ?, role = ? WHERE id = ?", nativeQuery = true)
-	    int updateUser(String name, String email, Role role, Long id);
+	User findByUserName(String userName);
 
-	    @Query(value = "SELECT * FROM users WHERE user_name = ?", nativeQuery = true)
-	    User findUserByUserName(String userName);
+	@Query(value = "SELECT * FROM users WHERE email = ?", nativeQuery = true)
+	User findUserByEmail(String email);
 
-	    @Query(value = "SELECT * FROM users WHERE email = ?", nativeQuery = true)
-	    User findUserByEmail(String email);
+	@Modifying
+	@Query(value = "UPDATE users SET enabled = ? WHERE id = ?", nativeQuery = true)
+	int updateUserStatus(Long id, boolean enabled);
 
-	    @Modifying
-	    @Query(value = "UPDATE users SET enabled = ? WHERE id = ?", nativeQuery = true)
-	    int updateUserStatus(Long id, boolean enabled);
-	    
-	    @Query(value = "select * from users", nativeQuery = true)
-	    List<User> getAllUser();
+	@Query(value = "select * from users", nativeQuery = true)
+	List<User> getAllUser();
 
+	java.util.Optional<User> findByEmail(String email);
+
+	java.util.Optional<User> findByResetToken(String token);
 }

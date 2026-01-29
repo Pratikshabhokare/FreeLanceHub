@@ -1,6 +1,8 @@
 import { Link, useNavigate } from "react-router-dom";
 import { useState, useEffect, useRef } from "react";
-import { getCurrentUser, getUnreadNotifications, markNotificationAsRead, markAllNotificationsAsRead } from "../../services/api";
+import { getCurrentUser, getUnreadNotifications, markNotificationAsRead, markAllNotificationsAsRead, logout } from "../../services/api";
+
+const getAvatarUrl = (name) => `https://ui-avatars.com/api/?name=${encodeURIComponent(name || 'User')}&background=random&size=50`;
 
 export default function Navbar() {
   const navigate = useNavigate();
@@ -59,55 +61,72 @@ export default function Navbar() {
 
   return (
     <nav className="navbar">
-      <div className="logo">
+      <div className="logo" onClick={() => navigate("/")}>
         <div className="logo-icon">FH</div>
         <span className="logo-text">FreelanceHub</span>
       </div>
 
       <div className="nav-links">
-        {/* Guest: Show standard public links */}
-        <Link to="/">Home</Link>
-        <Link to="/about">About us</Link>
+        <div className="nav-item-dropdown">
+          <span className="nav-link-text">Find Talent <i className="fas fa-chevron-down"></i></span>
+          <div className="dropdown-menu">
+            <Link to="/client/jobs?action=create">Post a Job</Link>
+            <Link to="/search?type=freelancers">Talent Marketplace</Link>
+            <Link to="/search?type=freelancers&focus=catalog">Project Catalog</Link>
+            <Link to="/search?type=freelancers&focus=agencies">Hire an Agency</Link>
+          </div>
+        </div>
 
-        {/* Client Access Only */}
-        {user && user.role === "CLIENT" && (
-          <>
-            <Link to="/client/jobs">My Jobs</Link>
-            <Link to="/client/inbox">Inbox</Link>
-          </>
+        <div className="nav-item-dropdown">
+          <span className="nav-link-text">Find Work <i className="fas fa-chevron-down"></i></span>
+          <div className="dropdown-menu">
+            <Link to="/search?type=jobs">Ways to Earn</Link>
+            <Link to="/search?type=jobs&focus=skills">Find Work for Your Skills</Link>
+            <Link to="/freelancer/proposals">Win Work with Ads</Link>
+          </div>
+        </div>
+
+        <div className="nav-item-dropdown">
+          <span className="nav-link-text">Why Us <i className="fas fa-chevron-down"></i></span>
+          <div className="dropdown-menu">
+            <Link to="/success-stories">Success Stories</Link>
+            <Link to="/reviews">Reviews</Link>
+            <Link to="/how-it-works">How it Works</Link>
+          </div>
+        </div>
+
+        <Link to="/enterprise" className="nav-link-text">Enterprise</Link>
+        <Link to="/pricing" className="nav-link-text">Pricing</Link>
+
+        {user && (
+          <div className="nav-user-links">
+            {user.role === "CLIENT" && (
+              <>
+                <Link to="/client/jobs">My Jobs</Link>
+                <Link to="/client/inbox">Inbox</Link>
+              </>
+            )}
+            {user.role === "FREELANCER" && (
+              <>
+                <Link to="/freelancer/proposals">Proposals</Link>
+                <Link to="/freelancer/earnings">Earnings</Link>
+              </>
+            )}
+            <Link to="/messages">Messages</Link>
+          </div>
         )}
-
-        {/* Freelancer Access Only */}
-        {user && user.role === "FREELANCER" && (
-          <>
-            <Link to="/discover">Discover</Link>
-            <Link to="/freelancer/proposals">My Proposals</Link>
-            <Link to="/freelancer/earnings">Earnings</Link>
-          </>
-        )}
-
-        {/* Shared or Guest */}
-        <Link to="/blog">Blog</Link>
-        {user && <Link to="/messages">Messages</Link>}
       </div>
 
       <div className="nav-actions">
         {user ? (
           <>
-            {/* Notification Bell */}
-            <div style={{ position: 'relative', marginRight: 15 }} ref={dropdownRef}>
+            <div style={{ position: 'relative' }} ref={dropdownRef}>
               <button
+                className="btn-muted"
                 onClick={() => setShowDropdown(!showDropdown)}
-                style={{
-                  background: 'transparent',
-                  border: 'none',
-                  cursor: 'pointer',
-                  padding: 5,
-                  display: 'flex',
-                  alignItems: 'center'
-                }}
+                style={{ padding: '8px', borderRadius: '50%' }}
               >
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
                   <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
                 </svg>
@@ -118,12 +137,13 @@ export default function Navbar() {
                     right: -2,
                     background: '#ef4444',
                     color: 'white',
-                    fontSize: '0.7em',
-                    fontWeight: 'bold',
-                    padding: '2px 6px',
+                    fontSize: '0.65rem',
+                    fontWeight: '700',
+                    padding: '2px 5px',
                     borderRadius: '50%',
-                    minWidth: '18px',
-                    textAlign: 'center'
+                    minWidth: '16px',
+                    textAlign: 'center',
+                    border: '2px solid #fff'
                   }}>
                     {notifications.length}
                   </span>
@@ -131,65 +151,53 @@ export default function Navbar() {
               </button>
 
               {showDropdown && (
-                <div style={{
-                  position: 'absolute',
-                  right: 0,
-                  top: '40px',
-                  width: '300px',
-                  background: 'white',
-                  border: '1px solid #e5e7eb',
-                  borderRadius: '12px',
-                  boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)',
-                  zIndex: 50,
-                  maxHeight: '400px',
-                  overflowY: 'auto'
-                }}>
-                  <div style={{ padding: '12px 16px', borderBottom: '1px solid #e5e7eb', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span style={{ fontWeight: '600', fontSize: '0.9em' }}>Notifications</span>
+                <div className="notification-dropdown">
+                  <div style={{ padding: '15px 20px', borderBottom: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#f8fafc' }}>
+                    <span style={{ fontWeight: '700', fontSize: '0.95rem', color: '#1e293b' }}>Notifications</span>
                     {notifications.length > 0 && (
-                      <button onClick={handleMarkAllRead} style={{ background: 'none', border: 'none', color: '#10b981', fontSize: '0.8em', cursor: 'pointer' }}>
+                      <button onClick={handleMarkAllRead} style={{ background: 'none', border: 'none', color: '#10b981', fontSize: '0.8rem', fontWeight: '600', cursor: 'pointer' }}>
                         Mark all read
                       </button>
                     )}
                   </div>
-                  {notifications.length === 0 ? (
-                    <div style={{ padding: '20px', textAlign: 'center', color: '#6b7280', fontSize: '0.9em' }}>
-                      No new notifications
-                    </div>
-                  ) : (
-                    <div>
-                      {notifications.map(n => (
-                        <div key={n.id} style={{ padding: '12px 16px', borderBottom: '1px solid #f3f4f6', cursor: 'pointer', background: 'white' }}
-                          onClick={() => handleMarkRead(n.id)}>
-                          <div style={{ fontSize: '0.9em', color: '#1f2937' }}>{n.message}</div>
-                          <div style={{ fontSize: '0.75em', color: '#9ca3af', marginTop: 4 }}>
-                            {new Date(n.createdAt).toLocaleTimeString()}
+                  <div style={{ maxHeight: '350px', overflowY: 'auto' }}>
+                    {notifications.length === 0 ? (
+                      <div style={{ padding: '30px 20px', textAlign: 'center', color: '#64748b', fontSize: '0.9rem' }}>
+                        <i className="fas fa-bell-slash" style={{ display: 'block', fontSize: '1.5rem', marginBottom: '10px', opacity: 0.5 }}></i>
+                        All caught up!
+                      </div>
+                    ) : (
+                      notifications.map(n => (
+                        <div key={n.id} className="notification-item" style={{ padding: '12px 20px', borderBottom: '1px solid #f1f5f9', cursor: 'pointer', transition: 'background 0.2s' }}
+                          onClick={() => handleMarkRead(n.id)}
+                          onMouseEnter={(e) => e.currentTarget.style.background = '#f8fafc'}
+                          onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}>
+                          <div style={{ fontSize: '0.9rem', color: '#334155', lineHeight: '1.4' }}>{n.message}</div>
+                          <div style={{ fontSize: '0.75rem', color: '#94a3b8', marginTop: 6, display: 'flex', alignItems: 'center', gap: '4px' }}>
+                            <i className="far fa-clock"></i>
+                            {new Date(n.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                           </div>
                         </div>
-                      ))}
-                    </div>
-                  )}
+                      ))
+                    )}
+                  </div>
                 </div>
               )}
             </div>
 
-            <Link to="/profile" className="btn-muted" style={{ marginRight: 10, textDecoration: 'none' }}>
-              Profile
+            <Link to="/profile" className="btn-muted" style={{ textDecoration: 'none' }}>
+              <img src={getAvatarUrl(user.name || user.userName)} alt="v" style={{ width: 28, height: 28, borderRadius: '50%', border: '2px solid #fff' }} />
+              <span style={{ marginLeft: '4px' }}>{user.name || user.userName}</span>
             </Link>
-            <button
-              className="btn-outline"
-              onClick={() => {
-                localStorage.removeItem("user");
-                window.location.href = "/";
-              }}
-            >
+
+            <button className="btn-outline" onClick={logout} style={{ padding: '0.6rem 1.2rem', fontSize: '0.9rem' }}>
               Logout
             </button>
           </>
         ) : (
           <>
             <button className="btn-outline" onClick={() => navigate("/login", { state: { isRegistering: false } })}>Login</button>
-            <button className="btn-primary" onClick={() => navigate("/login", { state: { isRegistering: true } })}>Sign up</button>
+            <button className="btn-primary" onClick={() => navigate("/login", { state: { isRegistering: true } })}>Get Started</button>
           </>
         )}
       </div>

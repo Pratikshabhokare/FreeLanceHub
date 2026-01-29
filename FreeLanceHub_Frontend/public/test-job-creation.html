@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Job Creation</title>
+</head>
+<body>
+    <h1>Test Job Creation API</h1>
+    <button onclick="testJobCreation()">Test Create Job</button>
+    <pre id="result"></pre>
+
+    <script>
+        async function testJobCreation() {
+            const resultEl = document.getElementById('result');
+            resultEl.textContent = 'Testing...';
+
+            try {
+                // Get token from localStorage (assuming you're logged in)
+                const token = localStorage.getItem('token');
+                const user = JSON.parse(localStorage.getItem('user') || '{}');
+
+                if (!token || !user.id) {
+                    resultEl.textContent = 'Error: Please login first at http://localhost:5173';
+                    return;
+                }
+
+                const jobData = {
+                    title: "Test Design Job",
+                    description: "Create a design for an art gallery that features a simple yet eye-catching logo",
+                    skills: ["PhotoShop", "UI/UX"],
+                    budgetType: "fixed",
+                    budgetMin: 1000,
+                    budgetMax: 2000,
+                    duration: "1-3 months",
+                    visibility: "public",
+                    status: "OPEN",
+                    client: { id: user.id }
+                };
+
+                console.log('Sending request to:', 'http://localhost:8081/job/save');
+                console.log('With data:', jobData);
+                console.log('With token:', token);
+
+                const response = await fetch('http://localhost:8081/job/save', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify(jobData)
+                });
+
+                console.log('Response status:', response.status);
+                console.log('Response headers:', [...response.headers.entries()]);
+
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    throw new Error(`HTTP ${response.status}: ${errorText}`);
+                }
+
+                const result = await response.json();
+                resultEl.textContent = 'SUCCESS!\n\n' + JSON.stringify(result, null, 2);
+                console.log('Success:', result);
+
+            } catch (error) {
+                resultEl.textContent = 'ERROR:\n\n' + error.message + '\n\n' + error.stack;
+                console.error('Error:', error);
+            }
+        }
+    </script>
+</body>
+</html>

@@ -36,25 +36,31 @@ public class ChatServiceImpl implements ChatService {
 
     @Override
     public ChatDto createOrGetChat(Long jobId, Long freelancerId, Long clientId) {
+        System.out.println("createOrGetChat: Job=" + jobId + ", Freelancer=" + freelancerId + ", Client=" + clientId);
         Job job = jobRepo.findById(jobId).orElseThrow(() -> new RuntimeException("Job not found"));
-        User freelancer = userRepo.findById(freelancerId).orElseThrow(() -> new RuntimeException("Freelancer not found"));
+        User freelancer = userRepo.findById(freelancerId)
+                .orElseThrow(() -> new RuntimeException("Freelancer not found"));
         User client = userRepo.findById(clientId).orElseThrow(() -> new RuntimeException("Client not found"));
 
         Optional<Chat> existing = chatRepo.findByJobAndClientAndFreelancer(job, client, freelancer);
         Chat chat;
         if (existing.isPresent()) {
+            System.out.println("Found existing chat: " + existing.get().getId());
             chat = existing.get();
         } else {
+            System.out.println("Creating new chat");
             chat = new Chat(job, client, freelancer);
             chat = chatRepo.save(chat);
         }
-        return mapToDto(chat, freelancerId); 
+        return mapToDto(chat, clientId); // Return DTO from requester's perspective (client)
     }
 
     @Override
     public List<ChatDto> getUserChats(Long userId) {
+        System.out.println("getUserChats for userId: " + userId);
         User user = userRepo.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
         List<Chat> chats = chatRepo.findByClientOrFreelancer(user, user);
+        System.out.println("Found " + chats.size() + " chats for user " + userId);
         return chats.stream().map(chat -> mapToDto(chat, userId)).collect(Collectors.toList());
     }
 
@@ -68,20 +74,20 @@ public class ChatServiceImpl implements ChatService {
 
     @Override
     public MessageDto sendMessage(Long chatId, Long senderId, String content) {
+        System.out.println("sendMessage: Chat=" + chatId + ", Sender=" + senderId);
         Chat chat = chatRepo.findById(chatId).orElseThrow(() -> new RuntimeException("Chat not found"));
         User sender = userRepo.findById(senderId).orElseThrow(() -> new RuntimeException("User not found"));
-        
+
         Message message = new Message(chat, sender, content);
         message = messageRepo.save(message);
 
         // Notify recipient
         User recipient = chat.getClient().getId().equals(senderId) ? chat.getFreelancer() : chat.getClient();
         notificationService.createNotification(
-            recipient, 
-            "New message from " + sender.getName(), 
-            com.FreeLanceHub.Entity.NotificationType.MESSAGE_RECEIVED
-        );
-        
+                recipient,
+                "New message from " + sender.getName(),
+                com.FreeLanceHub.Entity.NotificationType.MESSAGE_RECEIVED);
+
         return mapMessageToDto(message);
     }
 
@@ -90,14 +96,14 @@ public class ChatServiceImpl implements ChatService {
         dto.setId(chat.getId());
         dto.setJobId(chat.getJob().getId());
         dto.setJobTitle(chat.getJob().getTitle());
-        
+
         if (currentUserId != null) {
             boolean isClient = chat.getClient().getId().equals(currentUserId);
             User partner = isClient ? chat.getFreelancer() : chat.getClient();
             dto.setPartnerId(partner.getId());
             dto.setPartnerName(partner.getName());
         }
-        
+
         // Populate last message
         List<Message> msgs = messageRepo.findByChatIdOrderByCreatedAtAsc(chat.getId());
         if (!msgs.isEmpty()) {
@@ -110,12 +116,11 @@ public class ChatServiceImpl implements ChatService {
 
     private MessageDto mapMessageToDto(Message msg) {
         return new MessageDto(
-            msg.getId(),
-            msg.getChat().getId(),
-            msg.getSender().getId(),
-            msg.getSender().getName(),
-            msg.getContent(),
-            msg.getCreatedAt()
-        );
+                msg.getId(),
+                msg.getChat().getId(),
+                msg.getSender().getId(),
+                msg.getSender().getName(),
+                msg.getContent(),
+                msg.getCreatedAt());
     }
 }

@@ -7,13 +7,16 @@ import ProposalCard from "../../components/proposals/ProposalCard";
 import {
   getCurrentUser,
   getFreelancerProposals,
-  withdrawProposal
+  withdrawProposal,
+  createOrGetChat
 } from "../../services/api";
+import { useNavigate } from "react-router-dom";
 
 export default function MyProposalsPage() {
   const [proposals, setProposals] = useState([]);
   const [statusFilter, setStatusFilter] = useState("all");
   const [user, setUser] = useState(null);
+  const navigate = useNavigate();
 
   async function load() {
     try {
@@ -47,6 +50,16 @@ export default function MyProposalsPage() {
     }
   }
 
+  async function onMessage(p) {
+    try {
+      const chat = await createOrGetChat(p.job.id, p.freelancer.id, p.jobOwnerId || p.job.clientId || p.job.client.id);
+      navigate('/messages', { state: { selectedChat: chat } });
+    } catch (e) {
+      console.error("Failed to start chat", e);
+      alert("Failed to start chat. Ensure job owner info is available.");
+    }
+  }
+
   return (
     <>
       <Navbar />
@@ -76,6 +89,7 @@ export default function MyProposalsPage() {
               proposal={p}
               mode="freelancer"
               onWithdraw={onWithdraw}
+              onMessage={onMessage}
             // Editing content not supported in backend yet
             />
           ))}

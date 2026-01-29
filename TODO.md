@@ -1,0 +1,5 @@
+- [x] Update pom.xml parent Spring Boot version from 3.2.5 to 3.3.0
+- [x] Run mvn clean compile in backend directory
+- [x] Run mvn spring-boot:run to start backend server
+- [x] Run npm install in frontend directory
+- [x] Run npm run dev to start frontend development server

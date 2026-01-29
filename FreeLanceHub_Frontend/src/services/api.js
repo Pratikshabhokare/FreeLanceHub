@@ -1,14 +1,21 @@
-const BASE_URL = "http://localhost:8080";
+const API_BASE_URL = "http://localhost:8082";
 
 // Helper to handle API responses
 async function request(endpoint, options = {}) {
-    const url = `${BASE_URL}${endpoint}`;
+    const url = `${API_BASE_URL}${endpoint}`;
+    const token = localStorage.getItem("token");
+    const headers = {
+        "Content-Type": "application/json",
+        ...options.headers,
+    };
+
+    if (token) {
+        headers["Authorization"] = `Bearer ${token}`;
+    }
+
     const response = await fetch(url, {
-        headers: {
-            "Content-Type": "application/json",
-            ...options.headers,
-        },
         ...options,
+        headers,
     });
 
     if (!response.ok) {
@@ -18,7 +25,12 @@ async function request(endpoint, options = {}) {
 
     // Handle empty responses (e.g. from DELETE or void methods)
     const text = await response.text();
-    return text ? JSON.parse(text) : null;
+    try {
+        return text ? JSON.parse(text) : null;
+    } catch (e) {
+        // Response is likely plain text
+        return text;
+    }
 }
 
 // -------------------- Jobs --------------------
@@ -29,6 +41,11 @@ export async function getJobs() {
 export async function getJobsByClient(clientId) {
     if (!clientId) return [];
     return request(`/job/client/${clientId}`);
+}
+
+export async function getJobsByFreelancer(freelancerId) {
+    if (!freelancerId) return [];
+    return request(`/job/freelancer/${freelancerId}`);
 }
 
 export async function getPublicJobs() {
@@ -56,14 +73,30 @@ export async function createJob(jobData) {
 }
 
 export async function updateJob(jobId, jobData) {
+    const user = getCurrentUser();
+    if (!user || !user.id) {
+        throw new Error("You must be logged in to update a job.");
+    }
+
+    // Include clientId for ownership validation
+    const payload = {
+        ...jobData,
+        clientId: user.id
+    };
+
     return request(`/job/update/${jobId}`, {
         method: "PUT",
-        body: JSON.stringify(jobData),
+        body: JSON.stringify(payload),
     });
 }
 
 export async function deleteJob(jobId) {
-    return request(`/job/delete/${jobId}`, {
+    const user = getCurrentUser();
+    if (!user || !user.id) {
+        throw new Error("You must be logged in to delete a job.");
+    }
+
+    return request(`/job/delete/${jobId}?userId=${user.id}`, {
         method: "DELETE",
     });
 }
@@ -102,32 +135,46 @@ export async function withdrawProposal(proposalId) {
 }
 
 // -------------------- Users --------------------
-export async function login(email, password) {
-    // Call the real backend login endpoint
-    const user = await request(`/users/login?email=${encodeURIComponent(email)}&password=${encodeURIComponent(password)}`, {
-        method: "POST"
+export async function login(userName, password) {
+    const response = await request(`/auth/login`, {
+        method: "POST",
+        body: JSON.stringify({ userName, password })
     });
 
-    if (user) {
-        localStorage.setItem("user", JSON.stringify(user));
-        return user;
+    if (response && response.token) {
+        localStorage.setItem("token", response.token);
+        localStorage.setItem("user", JSON.stringify(response.user));
+        return response.user;
     }
 
     throw new Error("Invalid credentials");
 }
 
 export async function register(userData) {
-    // Backend: POST /users/saveUser
-    // Expects UserDto body
-    const response = await request(`/users/saveUser`, {
+    const response = await request(`/auth/register`, {
         method: "POST",
         body: JSON.stringify(userData)
     });
-    // Controller returns boolean true/false
-    if (response === true) {
-        return true;
-    }
-    throw new Error("Registration failed");
+    return response; // "User registered successfully"
+}
+
+export async function forgotPassword(email) {
+    const text = await request(`/auth/forgot-password?email=${encodeURIComponent(email)}`, {
+        method: "POST"
+    });
+    return text; // Returns the token for now (mock)
+}
+
+export async function resetPassword(token, newPassword) {
+    return request(`/auth/reset-password?token=${encodeURIComponent(token)}&newPassword=${encodeURIComponent(newPassword)}`, {
+        method: "POST"
+    });
+}
+
+export async function resetPasswordDirectly(email, newPassword) {
+    return request(`/auth/reset-password-direct?email=${encodeURIComponent(email)}&newPassword=${encodeURIComponent(newPassword)}`, {
+        method: "POST"
+    });
 }
 
 export async function updateUser(userId, userData) {
@@ -158,12 +205,13 @@ export async function searchFreelancers(queryOrFilters) {
         if (queryOrFilters.searchQuery) params.append("skills", queryOrFilters.searchQuery);
         if (queryOrFilters.maxPrice) params.append("maxHourlyRate", queryOrFilters.maxPrice);
         if (queryOrFilters.experience) {
-            // Extract number
             const exp = parseInt(queryOrFilters.experience);
             if (!isNaN(exp)) params.append("minExperience", exp);
         }
     }
-    return request(`/freelancer/search?${params.toString()}`);
+    const url = `/freelancer/search?${params.toString()}`;
+    console.log("Searching freelancers with URL:", url);
+    return request(url);
 }
 
 // Search Jobs
@@ -178,12 +226,17 @@ export async function searchJobs(queryOrFilters) {
         if (queryOrFilters.maxPrice) params.append("maxBudget", queryOrFilters.maxPrice);
         // duration, skills...
     }
-    return request(`/job/search?${params.toString()}`);
+    const url = `/job/search?${params.toString()}`;
+    console.log("Searching jobs with URL:", url);
+    const data = await request(url);
+    console.log("Search results received:", data);
+    return data;
 }
 
 export function logout() {
+    localStorage.removeItem("token");
     localStorage.removeItem("user");
-    window.location.href = "/";
+    window.location.href = "/login";
 }
 
 export function getCurrentUser() {
@@ -226,6 +279,22 @@ export async function markAllNotificationsAsRead(userId) {
     return request(`/notifications/user/${userId}/read-all`, { method: "PUT" });
 }
 
+// -------------------- Reviews --------------------
+export async function submitReview(reviewData) {
+    return request("/reviews/submit", {
+        method: "POST",
+        body: JSON.stringify(reviewData)
+    });
+}
+
+export async function getReviewsForUser(userId) {
+    return request(`/reviews/reviewee/${userId}`);
+}
+
+export async function getAverageRating(userId) {
+    return request(`/reviews/rating/${userId}`);
+}
+
 // -------------------- Payments --------------------
 export async function submitPayment(jobId, payerId) {
     return request(`/payments/pay/${jobId}?payerId=${payerId}`, {
@@ -235,4 +304,10 @@ export async function submitPayment(jobId, payerId) {
 
 export async function getPaymentHistory(userId) {
     return request(`/payments/history/${userId}`);
+}
+// -------------------- Chats --------------------
+export async function createChat(jobId, freelancerId, clientId) {
+    return request(`/chats/create?jobId=${jobId}&freelancerId=${freelancerId}&clientId=${clientId}`, {
+        method: "POST"
+    });
 }

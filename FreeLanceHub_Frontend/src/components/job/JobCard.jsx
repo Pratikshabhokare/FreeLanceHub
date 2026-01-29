@@ -1,6 +1,10 @@
 import StatusBadge from "./StatusBadge";
+import { getCurrentUser } from "../../services/api";
 
 export default function JobCard({ job, onView, onEdit, onDelete, onPay }) {
+  const currentUser = getCurrentUser();
+  const isOwner = currentUser && job.clientId && currentUser.id === job.clientId;
+
   return (
     <div className="card padded" style={{ display: "flex", justifyContent: "space-between", gap: 14 }}>
       <div style={{ flex: 1, minWidth: 0 }}>
@@ -49,8 +53,17 @@ export default function JobCard({ job, onView, onEdit, onDelete, onPay }) {
               Pay & Complete
             </button>
           )}
-          <button className="btn-muted" onClick={() => onEdit?.(job)}>Edit</button>
-          <button className="btn-danger" onClick={() => onDelete?.(job)}>Delete</button>
+          {job.status?.toUpperCase() === "COMPLETED" && (
+            <button className="btn-primary" onClick={() => onView?.(job)} style={{ background: "#f59e0b", borderColor: "#f59e0b" }}>
+              Rate & Review
+            </button>
+          )}
+          {isOwner && (
+            <>
+              <button className="btn-muted" onClick={() => onEdit?.(job)}>Edit</button>
+              <button className="btn-danger" onClick={() => onDelete?.(job)}>Delete</button>
+            </>
+          )}
         </div>
       </div>
     </div>

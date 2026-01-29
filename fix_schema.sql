@@ -1,0 +1,2 @@
+ALTER TABLE users ADD COLUMN provider VARCHAR(255);
+ALTER TABLE users ADD COLUMN provider_id VARCHAR(255);

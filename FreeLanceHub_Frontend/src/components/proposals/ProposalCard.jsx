@@ -71,6 +71,9 @@ export default function ProposalCard({
                 {proposal.status?.toUpperCase()}
               </span>
             )}
+            <button className="btn-outline" onClick={() => onMessage?.(proposal)}>
+              Message
+            </button>
           </>
         ) : (
           <>
@@ -80,6 +83,11 @@ export default function ProposalCard({
             <button className="btn-danger" onClick={() => onWithdraw?.(proposal)} disabled={isAccepted}>
               Withdraw
             </button>
+            {isAccepted && (
+              <button className="btn-outline" onClick={() => onMessage?.(proposal)}>
+                Message
+              </button>
+            )}
           </>
         )}
       </div>

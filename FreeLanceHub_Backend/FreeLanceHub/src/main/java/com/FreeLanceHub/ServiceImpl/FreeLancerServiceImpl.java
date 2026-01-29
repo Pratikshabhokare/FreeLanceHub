@@ -23,7 +23,6 @@ import com.FreeLanceHub.Repository.UserRepo;
 import com.FreeLanceHub.Service.FreeLancerService;
 
 import jakarta.transaction.Transactional;
-import jakarta.validation.Valid;
 
 @Service
 @Transactional
@@ -128,9 +127,15 @@ public class FreeLancerServiceImpl implements FreeLancerService {
 	}
 
 	@Override
-	public List<FreeLancerProfile> searchFreelancersAdvanced(String skills, Double maxHourlyRate, Integer minExperience) {
+	public List<FreeLancerProfile> searchFreelancersAdvanced(String skills, Double maxHourlyRate,
+			Integer minExperience) {
 		return profileRepository.findAll(
-				com.FreeLanceHub.Specification.FreelancerSpecification.filterFreelancers(skills, maxHourlyRate, minExperience)
-		);
+				com.FreeLanceHub.Specification.FreelancerSpecification.filterFreelancers(skills, maxHourlyRate,
+						minExperience));
+	}
+
+	@Override
+	public List<FreeLancerProfile> getAllFreelancers() {
+		return profileRepository.findAll();
 	}
 }

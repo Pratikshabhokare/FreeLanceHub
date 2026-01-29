@@ -1,6 +1,5 @@
 package com.FreeLanceHub.controller;
 
-
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,7 +28,9 @@ public class FreeLancerProfileController {
     @Autowired
     private FreeLancerService freelancerService;
 
-    /* -------------------- Save or Update Freelancer Profile -------------------- */
+    /*
+     * -------------------- Save or Update Freelancer Profile --------------------
+     */
     @PostMapping("/{freelancerId}/profile")
     public ResponseEntity<FreeLancerProfile> saveOrUpdateProfile(
             @PathVariable Long freelancerId,
@@ -46,17 +47,27 @@ public class FreeLancerProfileController {
         return ResponseEntity.ok(profile);
     }
 
-    /* -------------------- Browse Freelancers by Skills (Simple & Advanced) -------------------- */
+    /*
+     * -------------------- Browse Freelancers by Skills (Simple & Advanced)
+     * --------------------
+     */
     @GetMapping("/search")
     public ResponseEntity<List<FreeLancerProfile>> searchFreelancers(
             @RequestParam(required = false) String skills,
             @RequestParam(required = false) Double maxHourlyRate,
             @RequestParam(required = false) Integer minExperience) {
 
-        if ((skills != null && !skills.isEmpty()) && maxHourlyRate == null && minExperience == null) {
-             // Simple search fallback
-             return ResponseEntity.ok(freelancerService.searchFreelancersBySkills(skills));
+        // If no parameters provided, return all freelancers
+        if ((skills == null || skills.isEmpty()) && maxHourlyRate == null && minExperience == null) {
+            return ResponseEntity.ok(freelancerService.getAllFreelancers());
         }
+
+        // If only skills provided, use simple search
+        if ((skills != null && !skills.isEmpty()) && maxHourlyRate == null && minExperience == null) {
+            return ResponseEntity.ok(freelancerService.searchFreelancersBySkills(skills));
+        }
+
+        // Otherwise use advanced search
         return ResponseEntity.ok(freelancerService.searchFreelancersAdvanced(skills, maxHourlyRate, minExperience));
     }
 
@@ -69,7 +80,7 @@ public class FreeLancerProfileController {
     /* -------------------- Browse Open Jobs -------------------- */
     @GetMapping("/jobs")
     public ResponseEntity<?> browseJobs() {
-        return ResponseEntity.ok(freelancerService.browseJobs());//check
+        return ResponseEntity.ok(freelancerService.browseJobs());// check
     }
 
     /* -------------------- Submit Proposal for a Job -------------------- */
@@ -78,7 +89,7 @@ public class FreeLancerProfileController {
             @PathVariable Long freelancerId,
             @Valid @RequestBody ProposalDto proposalDto) {
 
-        return ResponseEntity.ok(freelancerService.submitProposal(freelancerId, proposalDto));//check
+        return ResponseEntity.ok(freelancerService.submitProposal(freelancerId, proposalDto));// check
     }
 
     /* -------------------- Update Job Status -------------------- */
@@ -89,6 +100,6 @@ public class FreeLancerProfileController {
             @RequestParam JobStatus status) {
 
         freelancerService.updateJobStatus(freelancerId, jobId, status);
-        return ResponseEntity.ok("Job status updated successfully");//check
+        return ResponseEntity.ok("Job status updated successfully");// check
     }
 }
