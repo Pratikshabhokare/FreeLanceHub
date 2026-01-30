@@ -110,10 +110,12 @@ public class JobServiceImpl implements JobService {
     }
 
     @Override
-    public List<JobDto> searchJobsAdvanced(String title, String description, List<String> skills, Double minBudget,
+    public List<JobDto> searchJobsAdvanced(String keyword, String title, String description, List<String> skills,
+            Double minBudget,
             Double maxBudget, String duration) {
         return jobDao.searchJobsAdvanced(
-                com.FreeLanceHub.Specification.JobSpecification.filterJobs(title, description, skills, minBudget,
+                com.FreeLanceHub.Specification.JobSpecification.filterJobs(keyword, title, description, skills,
+                        minBudget,
                         maxBudget, duration))
                 .stream().map(this::mapToDto).toList();
     }
@@ -137,6 +139,12 @@ public class JobServiceImpl implements JobService {
         if (job.getClient() != null) {
             dto.setClientId(job.getClient().getId());
             dto.setClientName(job.getClient().getName());
+        }
+
+        // Include assigned freelancer info
+        if (job.getAssignedFreelancer() != null) {
+            dto.setAssignedFreelancerId(job.getAssignedFreelancer().getId());
+            dto.setAssignedFreelancerName(job.getAssignedFreelancer().getName());
         }
 
         return dto;

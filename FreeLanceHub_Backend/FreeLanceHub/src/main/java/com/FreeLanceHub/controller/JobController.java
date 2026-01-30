@@ -78,10 +78,8 @@ public class JobController {
 			@RequestParam(required = false) Double minBudget,
 			@RequestParam(required = false) Double maxBudget,
 			@RequestParam(required = false) String duration) {
-		// Combine keyword with title/description for broader search
-		String effectiveTitle = (title != null && !title.isEmpty()) ? title : keyword;
-		String effectiveDesc = (description != null && !description.isEmpty()) ? description : keyword;
 
-		return jobService.searchJobsAdvanced(effectiveTitle, effectiveDesc, skills, minBudget, maxBudget, duration);
+		// Pass keyword explicitly. Leave title/desc as is (likely null if not provided)
+		return jobService.searchJobsAdvanced(keyword, title, description, skills, minBudget, maxBudget, duration);
 	}
 }

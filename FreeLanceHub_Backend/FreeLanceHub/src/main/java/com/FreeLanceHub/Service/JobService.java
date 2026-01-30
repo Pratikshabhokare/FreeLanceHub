@@ -34,6 +34,7 @@ public interface JobService {
 	public List<JobDto> searchJobs(String keyword);
 
 	// Advanced Search
-	public List<JobDto> searchJobsAdvanced(String title, String description, List<String> skills, Double minBudget,
+	public List<JobDto> searchJobsAdvanced(String keyword, String title, String description, List<String> skills,
+			Double minBudget,
 			Double maxBudget, String duration);
 }
