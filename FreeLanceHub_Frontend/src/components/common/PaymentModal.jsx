@@ -4,6 +4,7 @@ export default function PaymentModal({ job, onConfirm, onCancel }) {
     const [isProcessing, setIsProcessing] = useState(false);
     const [step, setStep] = useState("method"); // method | form | processing | success
     const [method, setMethod] = useState("card"); // card | upi | netbanking
+    const [hours, setHours] = useState(job?.duration ? parseInt(job.duration) || 1 : 1);
 
     const [form, setForm] = useState({
         cardNumber: "",
@@ -13,9 +14,22 @@ export default function PaymentModal({ job, onConfirm, onCancel }) {
         upiId: "",
     });
 
-    const totalAmount = job?.budget || 0;
-    const platformFee = totalAmount * 0.05; // 5% fee
-    const finalAmount = totalAmount + platformFee;
+    const isHourly = job?.budgetType === "hourly";
+
+    // Calculate total
+    let baseAmount = 0;
+    if (isHourly) {
+        // For hourly, we use budgetMin as the agreed hourly rate for simplicity, 
+        // or average of min/max if no specific rate is set.
+        // In a real app, 'agreedRate' would be in the proposal or job assignment.
+        const rate = job.budgetMin || 0;
+        baseAmount = rate * hours;
+    } else {
+        baseAmount = job?.budget || job?.budgetMin || job?.budgetMax || 0;
+    }
+
+    const platformFee = baseAmount * 0.05; // 5% fee
+    const finalAmount = baseAmount + platformFee;
 
     function handleMethodSelect(m) {
         setMethod(m);
@@ -34,7 +48,7 @@ export default function PaymentModal({ job, onConfirm, onCancel }) {
 
             // Auto close after success
             setTimeout(() => {
-                onConfirm();
+                onConfirm({ amount: finalAmount, hours: isHourly ? hours : undefined });
             }, 1500);
         }, 2500);
     }
@@ -71,9 +85,26 @@ export default function PaymentModal({ job, onConfirm, onCancel }) {
                     ) : (
                         <>
                             <div style={{ background: "#f8fafc", padding: 16, borderRadius: 8, marginBottom: 20, border: "1px solid #e2e8f0" }}>
+                                {isHourly && (
+                                    <div style={{ marginBottom: 16, paddingBottom: 16, borderBottom: '1px solid #e2e8f0' }}>
+                                        <label className="small" style={{ display: 'block', marginBottom: 6 }}>Hours Worked</label>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                                            <input
+                                                className="input"
+                                                type="number"
+                                                min="1"
+                                                value={hours}
+                                                onChange={(e) => setHours(Math.max(1, parseInt(e.target.value) || 0))}
+                                                style={{ width: 80 }}
+                                            />
+                                            <span style={{ color: '#64748b' }}>x ${job.budgetMin || 0}/hr</span>
+                                        </div>
+                                    </div>
+                                )}
+
                                 <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
-                                    <span style={{ color: "#64748b" }}>Job Budget</span>
-                                    <span style={{ fontWeight: 500 }}>${totalAmount.toFixed(2)}</span>
+                                    <span style={{ color: "#64748b" }}>{isHourly ? "Subtotal" : "Job Budget"}</span>
+                                    <span style={{ fontWeight: 500 }}>${baseAmount.toFixed(2)}</span>
                                 </div>
                                 <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
                                     <span style={{ color: "#64748b" }}>Platform Fee (5%)</span>
@@ -246,7 +277,6 @@ export default function PaymentModal({ job, onConfirm, onCancel }) {
         }
         .method-card .subtitle {
           font-size: 13px;
-          color: #6b7280;
         }
         .method-card .arrow {
           color: #9ca3af;

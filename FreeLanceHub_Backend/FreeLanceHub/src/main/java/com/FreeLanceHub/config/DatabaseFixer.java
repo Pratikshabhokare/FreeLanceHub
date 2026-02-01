@@ -32,6 +32,15 @@ public class DatabaseFixer {
             } catch (Exception e) {
                 System.out.println("'profile_picture' column might already exist or error occurred: " + e.getMessage());
             }
+
+            try {
+                // Attempt to remove the MAX_QUERIES_PER_HOUR limit
+                jdbcTemplate.execute("ALTER USER 'root'@'localhost' WITH MAX_QUERIES_PER_HOUR 0");
+                System.out.println("Successfully removed MAX_QUERIES_PER_HOUR limit for 'root'.");
+            } catch (Exception e) {
+                System.out.println(
+                        "Could not remove MAX_QUERIES_PER_HOUR limit (might need manual fix): " + e.getMessage());
+            }
         };
     }
 }

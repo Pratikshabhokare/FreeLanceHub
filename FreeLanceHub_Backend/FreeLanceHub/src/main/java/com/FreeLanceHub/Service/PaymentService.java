@@ -4,6 +4,7 @@ import com.FreeLanceHub.Dto.PaymentDto;
 import java.util.List;
 
 public interface PaymentService {
-    PaymentDto processPayment(Long jobId, Long payerId);
+    PaymentDto processPayment(Long jobId, Long payerId, Double amount);
+
     List<PaymentDto> getUserPaymentHistory(Long userId);
 }

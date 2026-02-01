@@ -60,7 +60,14 @@ export default function JobCard({ job, onView, onEdit, onDelete, onPay }) {
           )}
           {isOwner && (
             <>
-              <button className="btn-muted" onClick={() => onEdit?.(job)}>Edit</button>
+              <button
+                className="btn-muted"
+                onClick={() => onEdit?.(job)}
+                disabled={job.status?.toUpperCase() === "COMPLETED"}
+                style={{ opacity: job.status?.toUpperCase() === "COMPLETED" ? 0.5 : 1, cursor: job.status?.toUpperCase() === "COMPLETED" ? 'not-allowed' : 'pointer' }}
+              >
+                Edit
+              </button>
               <button className="btn-danger" onClick={() => onDelete?.(job)}>Delete</button>
             </>
           )}

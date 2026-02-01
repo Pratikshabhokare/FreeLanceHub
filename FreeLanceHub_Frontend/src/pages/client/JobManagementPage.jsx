@@ -29,7 +29,7 @@ export default function JobManagementPage() {
       setSearchParams({});
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [searchParams]);
 
   async function load() {
     const user = JSON.parse(localStorage.getItem("user"));
@@ -112,7 +112,7 @@ export default function JobManagementPage() {
     setPaymentJob(job);
   }
 
-  async function processPayment() {
+  async function processPayment(paymentDetails) {
     if (!paymentJob) return;
 
     try {
@@ -120,7 +120,9 @@ export default function JobManagementPage() {
       if (!user) return alert("Please login first");
 
       const { submitPayment } = await import("../../services/api");
-      await submitPayment(paymentJob.id, user.id);
+      // Use the amount from the modal if available, otherwise fallback
+      const amountToPay = paymentDetails?.amount || paymentJob.budget || 0;
+      await submitPayment(paymentJob.id, user.id, amountToPay);
 
       const jobToReview = { ...paymentJob, status: 'COMPLETED' };
       setPaymentJob(null);

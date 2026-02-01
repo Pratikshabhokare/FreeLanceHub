@@ -35,7 +35,7 @@ public class PaymentServiceImpl implements PaymentService {
     private NotificationService notificationService;
 
     @Override
-    public PaymentDto processPayment(Long jobId, Long payerId) {
+    public PaymentDto processPayment(Long jobId, Long payerId, Double amountOverride) {
         Job job = jobRepo.findById(jobId).orElseThrow(() -> new RuntimeException("Job not found"));
         User payer = userRepo.findById(payerId).orElseThrow(() -> new RuntimeException("Payer not found"));
 
@@ -52,7 +52,11 @@ public class PaymentServiceImpl implements PaymentService {
         }
 
         User payee = job.getAssignedFreelancer();
-        Double amount = job.getBudget() != null ? job.getBudget() : 0.0; // Assume fixed budget for MVP
+        // Use override amount if provided (for hourly or bonus), else fallback to
+        // budget
+        Double amount = (amountOverride != null && amountOverride > 0)
+                ? amountOverride
+                : (job.getBudget() != null ? job.getBudget() : 0.0);
 
         Payment payment = new Payment();
         payment.setJob(job);
@@ -70,10 +74,9 @@ public class PaymentServiceImpl implements PaymentService {
 
         // Notify Freelancer
         notificationService.createNotification(
-            payee,
-            "You received a payment of $" + amount + " for job: " + job.getTitle(),
-            NotificationType.PAYMENT_RELEASED
-        );
+                payee,
+                "You received a payment of $" + amount + " for job: " + job.getTitle(),
+                NotificationType.PAYMENT_RELEASED);
 
         return mapToDto(payment);
     }
@@ -81,14 +84,14 @@ public class PaymentServiceImpl implements PaymentService {
     @Override
     public List<PaymentDto> getUserPaymentHistory(Long userId) {
         User user = userRepo.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
-        
+
         List<Payment> asPayer = paymentRepo.findByPayer(user);
         List<Payment> asPayee = paymentRepo.findByPayee(user);
-        
+
         List<Payment> all = new ArrayList<>();
         all.addAll(asPayer);
         all.addAll(asPayee);
-        
+
         // Sort by date desc
         all.sort((p1, p2) -> p2.getCreatedAt().compareTo(p1.getCreatedAt()));
 
@@ -97,16 +100,15 @@ public class PaymentServiceImpl implements PaymentService {
 
     private PaymentDto mapToDto(Payment p) {
         return new PaymentDto(
-            p.getId(),
-            p.getJob().getId(),
-            p.getJob().getTitle(),
-            p.getPayer().getId(),
-            p.getPayer().getName(),
-            p.getPayee().getId(),
-            p.getPayee().getName(),
-            p.getAmount(),
-            p.getTransactionId(),
-            p.getCreatedAt()
-        );
+                p.getId(),
+                p.getJob().getId(),
+                p.getJob().getTitle(),
+                p.getPayer().getId(),
+                p.getPayer().getName(),
+                p.getPayee().getId(),
+                p.getPayee().getName(),
+                p.getAmount(),
+                p.getTransactionId(),
+                p.getCreatedAt());
     }
 }

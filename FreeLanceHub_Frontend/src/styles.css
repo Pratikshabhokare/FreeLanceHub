@@ -411,10 +411,12 @@ body {
     gap: 8px;
     z-index: 10;
     animation: float 5s ease-in-out infinite;
+    color: rgb(100, 94, 94);
 }
 
 .badge i {
     color: var(--accent);
+
 }
 
 .badge.top-left {

@@ -28,6 +28,9 @@ public class JobController {
 	// 🔹 Create Job
 	@PostMapping("/save")
 	public JobDto saveJob(@RequestBody Job job) {
+		System.out.println("Received request to save job: " + job);
+		if (job.getClient() != null)
+			System.out.println("Client ID: " + job.getClient().getId());
 		return jobService.saveJob(job);
 	}
 
@@ -59,7 +62,10 @@ public class JobController {
 	// 🔹 Get Jobs by Client ID
 	@GetMapping("/client/{clientId}")
 	public List<JobDto> getJobsByClient(@PathVariable Long clientId) {
-		return jobService.getJobsByClient(clientId);
+		System.out.println("Fetching jobs for client ID: " + clientId);
+		List<JobDto> jobs = jobService.getJobsByClient(clientId);
+		System.out.println("Found " + jobs.size() + " jobs for client " + clientId);
+		return jobs;
 	}
 
 	// 🔹 Get Jobs by Freelancer ID

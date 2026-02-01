@@ -38,27 +38,34 @@ export default function ClientInboxPage() {
   async function loadJobs(userId) {
     try {
       const myJobs = await getJobsByClient(userId);
-      setJobs(myJobs || []);
-      if (myJobs && myJobs.length > 0) setActiveJobId(myJobs[0].id);
+      setJobs(Array.isArray(myJobs) ? myJobs : []);
+      if (Array.isArray(myJobs) && myJobs.length > 0) setActiveJobId(myJobs[0].id);
     } catch (e) {
       console.error("Failed to load jobs", e);
+      setJobs([]);
     }
   }
 
   async function loadProposals(jobId) {
     try {
       const p = await getProposalsByJob(jobId);
-      setJobProposals(p);
+      setJobProposals(Array.isArray(p) ? p : []);
     } catch (e) {
       console.error("Failed to load proposals", e);
+      setJobProposals([]);
     }
   }
 
-  const activeJob = useMemo(() => jobs.find((j) => j.id === activeJobId), [jobs, activeJobId]);
+  const activeJob = useMemo(() => Array.isArray(jobs) ? jobs.find((j) => j.id === activeJobId) : null, [jobs, activeJobId]);
 
   async function startChat(p) {
     try {
-      // p.freelancer.id might need check if it exists in proposal object
+      // Safety check for nested objects
+      if (!p?.job?.id || !p?.freelancer?.id || !user?.id) {
+        console.error("Missing data for chat creation", p);
+        alert("Cannot start chat: Missing job or freelancer information.");
+        return;
+      }
       const chat = await createOrGetChat(p.job.id, p.freelancer.id, user.id);
       navigate('/messages', { state: { selectedChat: chat } });
     } catch (e) {

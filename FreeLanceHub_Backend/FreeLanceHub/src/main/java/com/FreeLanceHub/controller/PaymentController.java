@@ -16,8 +16,9 @@ public class PaymentController {
     private PaymentService paymentService;
 
     @PostMapping("/pay/{jobId}")
-    public ResponseEntity<PaymentDto> processPayment(@PathVariable Long jobId, @RequestParam Long payerId) {
-        return ResponseEntity.ok(paymentService.processPayment(jobId, payerId));
+    public ResponseEntity<PaymentDto> processPayment(@PathVariable Long jobId, @RequestParam Long payerId,
+            @RequestParam(required = false) Double amount) {
+        return ResponseEntity.ok(paymentService.processPayment(jobId, payerId, amount));
     }
 
     @GetMapping("/history/{userId}")

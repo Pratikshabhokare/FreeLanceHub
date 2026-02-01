@@ -18,11 +18,10 @@ public class JobDaoImpl implements JobDao {
 	private JobRepo jobRepo;
 
 	@Override
-	public Boolean saveJob(Job job) {
+	public Job saveJob(Job job) {
 		if (job == null)
-			return false;
-		jobRepo.save(job);
-		return true;
+			return null;
+		return jobRepo.save(job);
 	}
 
 	@Override
@@ -59,7 +58,7 @@ public class JobDaoImpl implements JobDao {
 
 	@Override
 	public List<Job> findByClientId(Long clientId) {
-		return jobRepo.findByClientId(clientId);
+		return jobRepo.findByClient_Id(clientId);
 	}
 
 	@Override

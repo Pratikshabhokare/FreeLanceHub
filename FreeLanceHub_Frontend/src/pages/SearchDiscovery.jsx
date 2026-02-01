@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { searchJobs, searchFreelancers, getCurrentUser, submitProposal } from '../services/api';
 import ProposalForm from '../components/proposals/ProposalForm';
 import Navbar from '../components/others/Navbar';
@@ -11,7 +11,11 @@ export default function SearchDiscovery() {
   const queryParams = new URLSearchParams(location.search);
   const initialType = queryParams.get('type') === 'jobs' ? 'jobs' : 'freelancers';
 
+  /* Initialize navigate */
+  const navigate = useNavigate();
+
   const [searchType, setSearchType] = useState(initialType);
+
 
   useEffect(() => {
     const type = queryParams.get('type');
@@ -54,7 +58,7 @@ export default function SearchDiscovery() {
       } else {
         data = await searchJobs(filters);
       }
-      setResults(data || []);
+      setResults(Array.isArray(data) ? data : []);
     } catch (err) {
       console.error(err);
       setError("Failed to fetch results");
@@ -208,7 +212,7 @@ export default function SearchDiscovery() {
                         </div>
                         <p className="card-description">{f.bio || `Specialized in ${f.title || 'Freelancing'}. Highly experienced specialist with a proven track record of successful projects.`}</p>
                         <div className="card-tags">
-                          {(f.skills || 'Generalist').split(',').map((skill, i) => (
+                          {(f.skills ? String(f.skills).split(',') : ['Generalist']).map((skill, i) => (
                             <span key={i} className="tag-badge">{skill.trim()}</span>
                           ))}
                         </div>
@@ -230,7 +234,29 @@ export default function SearchDiscovery() {
                           </button>
                           <button
                             className="btn-primary"
-                            onClick={() => navigate(`/profile/${f.freelancerId}`)} // Profile handles chat start
+                            onClick={async (e) => {
+                              e.stopPropagation();
+                              const user = getCurrentUser();
+                              if (!user) {
+                                alert("Please login to message freelancers.");
+                                navigate("/login");
+                                return;
+                              }
+                              // Basic check: prevent messaging yourself
+                              if (user.id === f.freelancerId) {
+                                alert("You cannot message yourself.");
+                                return;
+                              }
+                              try {
+                                // jobId=0 implies general inquiry
+                                const { createChat } = await import('../services/api');
+                                const chat = await createChat(0, f.freelancerId, user.id);
+                                navigate("/messages", { state: { selectedChat: chat } });
+                              } catch (err) {
+                                console.error(err);
+                                alert("Failed to start chat.");
+                              }
+                            }}
                           >
                             Quick Message
                           </button>

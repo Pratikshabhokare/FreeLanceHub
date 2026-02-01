@@ -32,8 +32,8 @@ public class JobServiceImpl implements JobService {
         } else {
             throw new RuntimeException("Job must have a Client ID");
         }
-        jobDao.saveJob(job);
-        return mapToDto(job);
+        Job savedJob = jobDao.saveJob(job);
+        return mapToDto(savedJob);
     }
 
     @Override

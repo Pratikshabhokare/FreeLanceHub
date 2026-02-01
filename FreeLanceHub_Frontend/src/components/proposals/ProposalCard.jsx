@@ -11,7 +11,9 @@ export default function ProposalCard({
   onMessage,
 }) {
   const isClient = mode === "client";
-  const isAccepted = proposal.status === "accepted";
+  const status = proposal.status?.toUpperCase();
+  const isFinalized = ["ACCEPTED", "REJECTED", "WITHDRAWN"].includes(status);
+  const isAccepted = status === "ACCEPTED";
 
   return (
     <div className="card padded">
@@ -19,16 +21,16 @@ export default function ProposalCard({
         <div style={{ minWidth: 0 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
             <h3 style={{ fontSize: 16, color: "#111827" }}>
-              {proposal.jobTitle || `Job: ${proposal.jobId}`}
+              {proposal.jobTitle || (proposal.job ? proposal.job.title : `Job: ${proposal.jobId}`)}
             </h3>
             <ProposalStatusPill status={proposal.status} />
           </div>
 
           <div className="small" style={{ marginTop: 6 }}>
             {isClient ? (
-              <>From: <span className="kbd">{proposal.freelancerName}</span></>
+              <>From: <span className="kbd">{proposal.freelancerName || (proposal.freelancer ? proposal.freelancer.name : "Unknown")}</span></>
             ) : (
-              <>Submitted as: <span className="kbd">{proposal.freelancerName}</span></>
+              <>Submitted as: <span className="kbd">{proposal.freelancerName || (proposal.freelancer ? proposal.freelancer.name : "You")}</span></>
             )}
             {" "}• On <span className="kbd">{proposal.createdAt}</span>
           </div>
@@ -57,7 +59,7 @@ export default function ProposalCard({
       <div style={{ marginTop: 14, display: "flex", justifyContent: "flex-end", gap: 8, flexWrap: "wrap" }}>
         {isClient ? (
           <>
-            {proposal.status?.toUpperCase() === "PENDING" ? (
+            {status === "PENDING" ? (
               <>
                 <button className="btn-primary" onClick={() => onAccept?.(proposal)}>
                   Accept
@@ -67,8 +69,8 @@ export default function ProposalCard({
                 </button>
               </>
             ) : (
-              <span className="badge-pill" style={{ background: proposal.status?.toUpperCase() === "ACCEPTED" ? "#dcfce7" : "#fee2e2", color: proposal.status?.toUpperCase() === "ACCEPTED" ? "#166534" : "#991b1b" }}>
-                {proposal.status?.toUpperCase()}
+              <span className="badge-pill" style={{ background: status === "ACCEPTED" ? "#dcfce7" : "#fee2e2", color: status === "ACCEPTED" ? "#166534" : "#991b1b" }}>
+                {status}
               </span>
             )}
             <button className="btn-outline" onClick={() => onMessage?.(proposal)}>
@@ -77,10 +79,20 @@ export default function ProposalCard({
           </>
         ) : (
           <>
-            <button className="btn-muted" onClick={() => onEdit?.(proposal)} disabled={isAccepted}>
+            <button
+              className="btn-muted"
+              onClick={() => onEdit?.(proposal)}
+              disabled={isFinalized}
+              style={{ opacity: isFinalized ? 0.5 : 1, cursor: isFinalized ? 'not-allowed' : 'pointer' }}
+            >
               Edit
             </button>
-            <button className="btn-danger" onClick={() => onWithdraw?.(proposal)} disabled={isAccepted}>
+            <button
+              className="btn-danger"
+              onClick={() => onWithdraw?.(proposal)}
+              disabled={isFinalized}
+              style={{ opacity: isFinalized ? 0.5 : 1, cursor: isFinalized ? 'not-allowed' : 'pointer' }}
+            >
               Withdraw
             </button>
             {isAccepted && (

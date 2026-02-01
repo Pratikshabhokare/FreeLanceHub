@@ -8,7 +8,7 @@ import com.FreeLanceHub.Entity.JobStatus;
 
 public interface JobDao {
 
-	public Boolean saveJob(Job job);
+	public Job saveJob(Job job);
 
 	// Update an existing job
 	public Boolean updateJob(Long jobId, JobDto jobDto);

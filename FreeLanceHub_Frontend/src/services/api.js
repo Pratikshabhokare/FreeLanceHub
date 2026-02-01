@@ -296,8 +296,12 @@ export async function getAverageRating(userId) {
 }
 
 // -------------------- Payments --------------------
-export async function submitPayment(jobId, payerId) {
-    return request(`/payments/pay/${jobId}?payerId=${payerId}`, {
+export async function submitPayment(jobId, payerId, amount) {
+    let url = `/payments/pay/${jobId}?payerId=${payerId}`;
+    if (amount !== undefined && amount !== null) {
+        url += `&amount=${amount}`;
+    }
+    return request(url, {
         method: "POST"
     });
 }

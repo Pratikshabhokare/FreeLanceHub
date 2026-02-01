@@ -23,7 +23,7 @@ export default function JobFormStepper({ initialValue, onSubmit, onCancel }) {
     budgetMax: 0,
     duration: "",
     visibility: "public",
-    status: "open",
+    status: "OPEN",
     ...initialValue,
   }));
 
@@ -155,12 +155,12 @@ export default function JobFormStepper({ initialValue, onSubmit, onCancel }) {
           <div>
             <label className="small" style={{ display: "block", marginBottom: 6 }}>Job status</label>
             <select className="select" value={form.status} onChange={(e) => patch({ status: e.target.value })}>
-              <option value="open">Open</option>
-              <option value="in_progress">In Progress</option>
-              <option value="closed">Closed</option>
+              <option value="OPEN">Open</option>
+              <option value="IN_PROGRESS">In Progress</option>
+              <option value="CLOSED">Closed</option>
             </select>
             <p className="small" style={{ marginTop: 8 }}>
-              Set to <span className="kbd">open</span> to receive proposals.
+              Set to <span className="kbd">OPEN</span> to receive proposals.
             </p>
           </div>
         </div>
