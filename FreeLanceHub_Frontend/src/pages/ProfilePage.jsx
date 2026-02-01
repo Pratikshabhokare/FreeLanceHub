@@ -164,7 +164,7 @@ export default function ProfilePage() {
 
                                 <div style={{ display: 'flex', gap: '12px', marginBottom: 10 }}>
                                     {isOwnProfile ? (
-                                        <button onClick={() => navigate("/profile")} style={btnSecondary}>Edit Profile</button>
+                                        <button onClick={() => navigate("/profile/edit")} style={btnSecondary}>Edit Profile</button>
                                     ) : (
                                         <>
                                             <button onClick={handleStartChat} style={btnPrimary}>Message</button>

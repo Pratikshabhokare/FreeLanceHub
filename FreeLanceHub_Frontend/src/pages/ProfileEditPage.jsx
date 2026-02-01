@@ -67,6 +67,27 @@ export default function ProfileEditPage() {
     async function handleSave() {
         if (!user) return;
 
+        // Validation
+        if (user.role === "FREELANCER") {
+            if (!profile.bio || !profile.skills || !profile.hourlyRate || !profile.experience) {
+                alert("Please fill in all profile fields (Bio, Skills, Hourly Rate, Experience)");
+                return;
+            }
+            if (parseFloat(profile.hourlyRate) <= 0) {
+                alert("Hourly rate must be greater than 0");
+                return;
+            }
+            if (parseInt(profile.experience) <= 0) {
+                alert("Experience must be greater than 0");
+                return;
+            }
+        } else {
+            if (!userInfo.name || !userInfo.email) {
+                alert("Name and Email are required");
+                return;
+            }
+        }
+
         setSaving(true);
         try {
             // Update basic user info
@@ -81,8 +102,8 @@ export default function ProfileEditPage() {
                 await saveFreelancerProfile(user.id, {
                     bio: profile.bio,
                     skills: profile.skills,
-                    hourlyRate: parseFloat(profile.hourlyRate) || 0,
-                    experience: parseInt(profile.experience) || 0
+                    hourlyRate: parseFloat(profile.hourlyRate),
+                    experience: parseInt(profile.experience)
                 });
             }
 
@@ -95,7 +116,12 @@ export default function ProfileEditPage() {
             navigate("/profile");
         } catch (err) {
             console.error("Failed to save profile:", err);
-            alert("Failed to save profile: " + err.message);
+            // Show more detailed error if available
+            let msg = err.message;
+            if (msg.includes("Validation failed")) {
+                msg = "Please check your inputs. All fields are required and must be valid.";
+            }
+            alert("Failed to save profile: " + msg);
         } finally {
             setSaving(false);
         }

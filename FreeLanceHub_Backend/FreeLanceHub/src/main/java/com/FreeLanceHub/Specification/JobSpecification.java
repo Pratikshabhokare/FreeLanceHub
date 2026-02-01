@@ -9,7 +9,8 @@ import java.util.List;
 
 public class JobSpecification {
 
-    public static Specification<Job> filterJobs(String title, String description, List<String> skills, Double minBudget,
+    public static Specification<Job> filterJobs(String keyword, String title, String description, List<String> skills,
+            Double minBudget,
             Double maxBudget, String duration) {
         return (root, query, criteriaBuilder) -> {
             List<Predicate> predicates = new ArrayList<>();
@@ -17,6 +18,22 @@ public class JobSpecification {
             // Default to OPEN status for discovery
             predicates.add(criteriaBuilder.equal(root.get("status"), com.FreeLanceHub.Entity.JobStatus.OPEN));
 
+            if (keyword != null && !keyword.isEmpty()) {
+                String likePattern = "%" + keyword.toLowerCase() + "%";
+                Predicate titleLike = criteriaBuilder.like(criteriaBuilder.lower(root.get("title")), likePattern);
+                Predicate descLike = criteriaBuilder.like(criteriaBuilder.lower(root.get("description")), likePattern);
+
+                // Also search in skills
+                Predicate skillMember = criteriaBuilder.isMember(keyword, root.get("skills"));
+                // Note: isMember checks exact match for the element. For fuzzy search in
+                // collection elements we'd need a join.
+                // But typically "Java" skill is just "Java".
+
+                predicates.add(criteriaBuilder.or(titleLike, descLike, skillMember));
+            }
+
+            // Keep specific field filters as AND if they are provided separately (advanced
+            // search)
             if (title != null && !title.isEmpty()) {
                 predicates.add(criteriaBuilder.like(criteriaBuilder.lower(root.get("title")),
                         "%" + title.toLowerCase() + "%"));

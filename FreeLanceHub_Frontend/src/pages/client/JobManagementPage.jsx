@@ -122,9 +122,13 @@ export default function JobManagementPage() {
       const { submitPayment } = await import("../../services/api");
       await submitPayment(paymentJob.id, user.id);
 
+      const jobToReview = { ...paymentJob, status: 'COMPLETED' };
       setPaymentJob(null);
       await load();
-      // Success alerting handled in Modal
+
+      // Auto-open review modal
+      alert("Payment successful! Please leave a review.");
+      setReviewJob(jobToReview);
     } catch (err) {
       console.error(err);
       alert("Payment failed: " + err.message);
@@ -146,10 +150,14 @@ export default function JobManagementPage() {
       // Assuming revieweeId is the freelancer assigned to this job
       // In a real app, the job object would have `assignedFreelancerId`
       // We'll try to find it from some field or just use 1 if null for demo
+      const revieweeId = reviewJob.assignedFreelancer?.id || reviewJob.assignedFreelancerId;
+      if (!revieweeId) {
+        throw new Error("Cannot identify freelancer to review.");
+      }
       const payload = {
         jobId: reviewJob.id,
         reviewerId: user.id,
-        revieweeId: reviewJob.assignedFreelancerId || 1,
+        revieweeId: revieweeId,
         rating: reviewData.rating,
         comment: reviewData.comment
       };

@@ -1,3 +1,5 @@
+package com.FreeLanceHub.config;
+
 import com.FreeLanceHub.Entity.User;
 import com.FreeLanceHub.Entity.Role;
 import com.FreeLanceHub.Repository.UserRepo;

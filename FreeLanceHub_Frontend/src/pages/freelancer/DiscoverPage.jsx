@@ -9,7 +9,8 @@ import {
   getPublicJobs,
   getFreelancerProposals,
   submitProposal,
-  getCurrentUser, // Import this
+  getCurrentUser,
+  getFreelancerProfile, // Added import
 } from "../../services/api";
 
 export default function DiscoverPage() {
@@ -17,7 +18,9 @@ export default function DiscoverPage() {
   const [myProposals, setMyProposals] = useState([]);
   const [query, setQuery] = useState("");
   const [applyJob, setApplyJob] = useState(null);
+  const [userSkills, setUserSkills] = useState([]); // State for user skills
 
+  // Filter jobs based on search query
   const filteredJobs = useMemo(() => {
     const q = query.trim().toLowerCase();
     if (!q) return jobs || [];
@@ -25,10 +28,28 @@ export default function DiscoverPage() {
       return (
         j.title.toLowerCase().includes(q) ||
         j.description.toLowerCase().includes(q) ||
-        j.skills.some((skill) => skill.toLowerCase().includes(q))
+        (j.skills && j.skills.some((skill) => skill.toLowerCase().includes(q)))
       );
     });
   }, [jobs, query]);
+
+  // Recommended jobs based on skills
+  const recommendedJobs = useMemo(() => {
+    if (userSkills.length === 0) return [];
+
+    // Convert user skills to lowercase for case-insensitive matching
+    const normalizedUserSkills = userSkills.map(s => s.toLowerCase());
+
+    return (jobs || []).filter(job => {
+      if (!job.skills || job.skills.length === 0) return false;
+      // Check for intersections
+      return job.skills.some(jobSkill =>
+        normalizedUserSkills.includes(jobSkill.toLowerCase()) ||
+        normalizedUserSkills.some(us => jobSkill.toLowerCase().includes(us)) // Partial match
+      );
+    }).filter(job => job.status === "OPEN")
+      .slice(0, 3); // Limit recommendation to top 3
+  }, [jobs, userSkills]);
 
   const appliedJobIds = useMemo(() => new Set((myProposals || []).map((p) => p.jobId)), [myProposals]);
 
@@ -41,6 +62,18 @@ export default function DiscoverPage() {
       if (user) {
         const freelancerProposals = await getFreelancerProposals(user.id);
         setMyProposals(freelancerProposals || []);
+
+        // Load profile to get skills
+        try {
+          const profile = await getFreelancerProfile(user.id);
+          if (profile && profile.skills) {
+            // "React, Java, Python" -> ["React", "Java", "Python"]
+            const skillsArray = profile.skills.split(',').map(s => s.trim()).filter(s => s);
+            setUserSkills(skillsArray);
+          }
+        } catch (e) {
+          console.log("No profile or error fetching profile for skills", e);
+        }
       }
     } catch (error) {
       console.error("Failed to load jobs or proposals:", error);
@@ -95,6 +128,37 @@ export default function DiscoverPage() {
         </div>
 
         <div className="list">
+
+          {/* Recommendation Section */}
+          {userSkills.length > 0 && recommendedJobs.length > 0 && !query && (
+            <div style={{ marginBottom: '40px' }}>
+              <h2 style={{ fontSize: '1.4rem', color: '#10b981', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <i className="fas fa-sparkles"></i> Recommended for You
+              </h2>
+              <div style={{ display: 'grid', gap: '20px' }}>
+                {recommendedJobs.map(job => (
+                  <DiscoveryJobCard
+                    key={'rec-' + job.id}
+                    job={job}
+                    disabled={appliedJobIds.has(job.id)}
+                    onApply={() => setApplyJob(job)}
+                    highlight={true} // Maybe add a prop to style it differently?
+                  />
+                ))}
+              </div>
+              <div style={{ borderBottom: '1px solid #e2e8f0', margin: '40px 0' }}></div>
+              <h2 style={{ fontSize: '1.2rem', color: '#475569', marginBottom: '15px' }}>
+                All Jobs
+              </h2>
+            </div>
+          )}
+
+          {userSkills.length === 0 && !query && (
+            <div style={{ background: '#f0fdf4', padding: '15px', borderRadius: '10px', marginBottom: '20px', border: '1px solid #bbf7d0', color: '#166534' }}>
+              <strong>Tip:</strong> <a href="/profile/edit" style={{ color: 'inherit', textDecoration: 'underline' }}>Add skills to your profile</a> to get personalized job recommendations.
+            </div>
+          )}
+
           {filteredJobs.map((job) => {
             const already = appliedJobIds.has(job.id);
             return (

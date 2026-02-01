@@ -20,6 +20,9 @@ public class JobDto extends BaseEntity {
 	private Double budgetMin;
 	private Double budgetMax;
 
+	private Long assignedFreelancerId;
+	private String assignedFreelancerName;
+
 	public JobDto() {
 		super();
 		// TODO Auto-generated constructor stub
@@ -137,6 +140,22 @@ public class JobDto extends BaseEntity {
 
 	public void setClientId(Long clientId) {
 		this.clientId = clientId;
+	}
+
+	public Long getAssignedFreelancerId() {
+		return assignedFreelancerId;
+	}
+
+	public void setAssignedFreelancerId(Long assignedFreelancerId) {
+		this.assignedFreelancerId = assignedFreelancerId;
+	}
+
+	public String getAssignedFreelancerName() {
+		return assignedFreelancerName;
+	}
+
+	public void setAssignedFreelancerName(String assignedFreelancerName) {
+		this.assignedFreelancerName = assignedFreelancerName;
 	}
 
 	@Override
