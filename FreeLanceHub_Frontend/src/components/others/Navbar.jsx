@@ -104,6 +104,7 @@ export default function Navbar() {
               <>
                 <Link to="/client/jobs">My Jobs</Link>
                 <Link to="/client/inbox">Inbox</Link>
+                <Link to="/client/financials">Financials</Link>
               </>
             )}
             {user.role === "FREELANCER" && (

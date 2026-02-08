@@ -85,7 +85,7 @@ public class AuthService {
     }
 
     public void updatePasswordDirectly(String email, String newPassword) {
-        User user = userRepo.findByEmail(email)
+        User user = userRepo.findByEmail(email.trim())
                 .orElseThrow(() -> new RuntimeException("User not found with email: " + email));
         user.setPassword(passwordEncoder.encode(newPassword));
         // Clear any existing reset tokens to be clean

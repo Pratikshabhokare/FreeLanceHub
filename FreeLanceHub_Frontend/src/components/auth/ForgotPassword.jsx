@@ -27,7 +27,8 @@ export default function ForgotPassword() {
             setMessage("Password updated successfully! You can now login.");
         } catch (err) {
             console.error(err);
-            setError("Failed to update password. Please check if the email is correct.");
+            // Show the actual error from backend (e.g. "User not found")
+            setError(err.message || "Failed to update password. Please check if the email is correct.");
         }
     }
 

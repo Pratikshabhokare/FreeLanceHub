@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { login, register } from "../../services/api";
+import { login, register, API_BASE_URL } from "../../services/api";
 import Navbar from "./Navbar";
 import Footer from "./Footer";
 import "./Login.css";
@@ -51,9 +51,9 @@ export default function Login() {
         // Pass 'email' state as 'userName' to match backend LoginRequest
         const user = await login(email, password);
         if (user && user.role === "CLIENT") {
-          navigate("/client/jobs");
+          navigate("/");
         } else {
-          navigate("/discover");
+          navigate("/");
         }
       }
     } catch (err) {
@@ -101,7 +101,7 @@ export default function Login() {
                     required
                   />
                   <div className="role-select-wrapper">
-                    <label className="role-label" style={{ textAlign: 'left' }}>I want to:</label>
+                    <label className="role-label" style={{ textAlign: 'left' }}>Role :</label>
                     <select
                       className="role-select"
                       value={role}
@@ -161,7 +161,7 @@ export default function Login() {
                 <button
                   type="button"
                   className="social-btn google"
-                  onClick={() => window.location.href = 'http://localhost:8082/oauth2/authorization/google'}
+                  onClick={() => window.location.href = `${API_BASE_URL}/oauth2/authorization/google`}
                 >
                   <i className="fab fa-google"></i>
                   <span>Sign in with Google</span>
@@ -170,7 +170,7 @@ export default function Login() {
                 <button
                   type="button"
                   className="social-btn github"
-                  onClick={() => window.location.href = 'http://localhost:8082/oauth2/authorization/github'}
+                  onClick={() => window.location.href = `${API_BASE_URL}/oauth2/authorization/github`}
                 >
                   <i className="fab fa-github"></i>
                   <span>Sign in with GitHub</span>

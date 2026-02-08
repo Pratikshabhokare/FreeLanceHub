@@ -1,0 +1,55 @@
+services:
+  backend:
+    build: 
+      context: ./FreeLanceHub_Backend/FreeLanceHub
+      dockerfile: Dockerfile
+    container_name: freelance_backend
+    ports:
+      - "8082:8082"
+    environment:
+      - PORT=8082
+      - DB_URL=jdbc:mysql://db:3306/freeLanceHub
+      - DB_USERNAME=root
+      - DB_PASSWORD=root
+      # Add your OAuth keys here or in a .env file
+      # - GOOGLE_CLIENT_ID=...
+    depends_on:
+      - db
+    networks:
+      - freelance-net
+    restart: always
+
+  frontend:
+    build: 
+      context: ./FreeLanceHub_Frontend
+      dockerfile: Dockerfile
+      args:
+        # Change this to your production domain if deploying remotely
+        # e.g. http://api.mydomain.com
+        - VITE_API_URL=http://localhost:8082
+    container_name: freelance_frontend
+    ports:
+      - "5173:80"
+    networks:
+      - freelance-net
+    restart: always
+
+  db:
+    image: mysql:8.0
+    container_name: freelance_db
+    restart: always
+    environment:
+      MYSQL_DATABASE: freeLanceHub
+      MYSQL_ROOT_PASSWORD: root
+    ports:
+      - "3306:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+    networks:
+      - freelance-net
+
+networks:
+  freelance-net:
+
+volumes:
+  db_data:

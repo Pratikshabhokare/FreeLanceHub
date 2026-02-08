@@ -25,7 +25,7 @@ public class JobController {
 	@Autowired
 	private JobService jobService;
 
-	// 🔹 Create Job
+	// Create Job
 	@PostMapping("/save")
 	public JobDto saveJob(@RequestBody Job job) {
 		System.out.println("Received request to save job: " + job);
@@ -34,32 +34,32 @@ public class JobController {
 		return jobService.saveJob(job);
 	}
 
-	// 🔹 Update Job
+	// Update Job
 	@PutMapping("/update/{jobId}")
 	public JobDto updateJob(@PathVariable Long jobId, @RequestBody JobDto jobDto) {
 		return jobService.updateJob(jobId, jobDto);
 	}
 
-	// 🔹 Delete Job
+	// Delete Job
 	@DeleteMapping("/delete/{jobId}")
 	public String deleteJob(@PathVariable Long jobId, @RequestParam Long userId) {
 		jobService.deleteJob(jobId, userId);
 		return "Job deleted successfully";
 	}
 
-	// 🔹 Get Job by ID
+	// Get Job by ID
 	@GetMapping("/{jobId}")
 	public JobDto getJobById(@PathVariable Long jobId) {
 		return jobService.getJobById(jobId);
 	}
 
-	// 🔹 Get Jobs by Status
+	// Get Jobs by Status
 	@GetMapping("/status/{status}")
 	public List<JobDto> getJobsByStatus(@PathVariable JobStatus status) {
 		return jobService.getJobsByStatus(status);
 	}
 
-	// 🔹 Get Jobs by Client ID
+	// Get Jobs by Client ID
 	@GetMapping("/client/{clientId}")
 	public List<JobDto> getJobsByClient(@PathVariable Long clientId) {
 		System.out.println("Fetching jobs for client ID: " + clientId);
@@ -68,13 +68,13 @@ public class JobController {
 		return jobs;
 	}
 
-	// 🔹 Get Jobs by Freelancer ID
+	// Get Jobs by Freelancer ID
 	@GetMapping("/freelancer/{freelancerId}")
 	public List<JobDto> getJobsByFreelancer(@PathVariable Long freelancerId) {
 		return jobService.getJobsByFreelancer(freelancerId);
 	}
 
-	// 🔹 Search Jobs (Simple & Advanced)
+	// Search Jobs (Simple & Advanced)
 	@GetMapping("/search")
 	public List<JobDto> searchJobs(
 			@RequestParam(required = false) String keyword,

@@ -8,6 +8,7 @@ import SearchDiscovery from "./pages/SearchDiscovery";
 // Client
 import JobManagementPage from "./pages/client/JobManagementPage";
 import ClientInboxPage from "./pages/client/ClientInboxPage";
+import ClientFinancialsPage from "./pages/client/ClientFinancialsPage";
 
 // Freelancer
 import DiscoverPage from "./pages/freelancer/DiscoverPage";
@@ -42,6 +43,7 @@ export default function App() {
       <Route element={<ProtectedRoute role="CLIENT" />}>
         <Route path="/client/jobs" element={<JobManagementPage />} />
         <Route path="/client/inbox" element={<ClientInboxPage />} />
+        <Route path="/client/financials" element={<ClientFinancialsPage />} />
       </Route>
 
       {/* Freelancer Protected Routes */}

@@ -268,15 +268,7 @@ export default function JobManagementPage() {
                 When you accept a proposal (on the Proposals page), update the job status to <span className="kbd">in_progress</span>. When completed, set it to <span className="kbd">closed</span>.
               </p>
 
-              <div className="card padded" style={{ background: "#fff1db", borderColor: "#fde7c2" }}>
-                <h4 style={{ color: "#14532d" }}>API mapping (Spring Boot)</h4>
-                <ul style={{ marginTop: 10, paddingLeft: 18, color: "#374151", lineHeight: 1.6 }}>
-                  <li><span className="kbd">GET /api/jobs</span> → list jobs</li>
-                  <li><span className="kbd">POST /api/jobs</span> → create job</li>
-                  <li><span className="kbd">PUT /api/jobs/{`{id}`}</span> → update job</li>
-                  <li><span className="kbd">DELETE /api/jobs/{`{id}`}</span> → delete job</li>
-                </ul>
-              </div>
+
             </div>
           </div>
         </div>

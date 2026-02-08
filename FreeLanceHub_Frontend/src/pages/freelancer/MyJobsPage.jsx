@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import Navbar from "../../components/others/Navbar";
 import Footer from "../../components/others/Footer";
-import { getCurrentUser, updateJob, getJobsByFreelancer } from "../../services/api";
+import { getCurrentUser, updateJob, getJobsByFreelancer, API_BASE_URL } from "../../services/api";
 import StatusBadge from "../../components/job/StatusBadge";
 import { useNavigate } from "react-router-dom";
 
@@ -41,7 +41,7 @@ export default function MyJobsPage() {
 
         try {
             const token = localStorage.getItem("token");
-            const response = await fetch(`http://localhost:8082/job/${jobId}/status?status=${newStatus}`, {
+            const response = await fetch(`${API_BASE_URL}/job/${jobId}/status?status=${newStatus}`, {
                 method: 'PUT',
                 headers: {
                     "Authorization": `Bearer ${token}`
